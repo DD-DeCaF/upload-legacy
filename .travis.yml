@@ -9,7 +9,7 @@ before_install:
 install: docker-compose up -d
 
 script:
-- docker-compose exec web /bin/bash -c "py.test --cov=./upload upload/tests/"
+- docker-compose exec web /bin/bash -c "pytest --cov=./upload upload/tests/"
 
 after_success:
 - docker-compose exec web /bin/bash -c "codecov --token $CODECOV_TOKEN"
