@@ -24,10 +24,10 @@ def test_media_inspection(examples):
         assert isinstance(name, str)
     with pytest.raises(ValueError) as excinfo:
         cup.MediaUploader('TST', join(examples, 'media-invalid.csv'), [])
-        report = json.loads(str(excinfo))
-        assert report['error-count'] == 1
-        error = report['tables']['errors'].pop()
-        assert 'not a compound' in error['message']
+    report = json.loads(str(excinfo.value))
+    assert report['error-count'] == 1
+    error = report['tables'][0]['errors'].pop()
+    assert 'does not conform to the maximum' in error['message']
 
 
 def test_strains_inspection(examples):
@@ -38,10 +38,10 @@ def test_strains_inspection(examples):
     assert up.iloop_args[2]['strain_alias'] == 'foo-3'
     with pytest.raises(ValueError) as excinfo:
         cup.StrainsUploader('TST', join(examples, 'strains-invalid.csv'))
-        report = json.loads(str(excinfo))
-        assert report['error-count'] == 1
-        error = report['tables']['errors'].pop()
-        assert 'bad expected gnomic' in error['message']
+    report = json.loads(str(excinfo.value))
+    assert report['error-count'] == 1
+    error = report['tables'][0]['errors'].pop()
+    assert 'bad expected gnomic' in error['message']
 
 
 def test_experiment_inspection(examples):

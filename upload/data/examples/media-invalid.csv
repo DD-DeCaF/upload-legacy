@@ -2,4 +2,4 @@ medium,compound_name,pH,concentration,comment
 my-batch,(NH4)2SO4,5,3,
 my-batch,KH2PO4,5,14.0,
 my-batch,MgCl2,5,1.0,
-my-batch,glucose,,5,500
+my-batch,glucose,500,2,
