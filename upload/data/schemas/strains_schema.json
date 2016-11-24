@@ -1,0 +1,54 @@
+{
+    "fields": [
+        {
+            "name": "pool",
+            "title": "the iloop 'identifier' of the pool associated with these strains.",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "strain",
+            "title": "the iloop 'strain alias'",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "genotype",
+            "title": "the gnomic definition genotype",
+            "type": "string"
+        },
+        {
+            "name": "parent",
+            "title": "alias of the parent strain",
+            "type": "string"
+        },
+        {
+            "name": "reference",
+            "title": "is strain a reference or not",
+            "type": "boolean"
+        },
+        {
+            "name": "organism",
+            "title": "the organism/species of the strain",
+            "type": "string",
+            "enum": [
+                "SCE",
+                "ECO"
+            ]
+        }
+    ],
+    "foreignKeys": [
+        {
+            "fields": "parent",
+            "reference": {
+                "datapackage": "",
+                "resource": "self",
+                "fields": "strain"
+            }
+        }
+    ]
+}

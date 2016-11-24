@@ -1,0 +1,43 @@
+{
+    "fields": [
+        {
+            "name": "medium",
+            "title": "the iloop 'name' of the medium.",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "compound_name",
+            "title": "the iloop coumpund 'chebi_name' of the medium, or something that can be resolved to one.",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "pH",
+            "title": "the pH of the medium",
+            "type": "number",
+            "constraints": {
+                "required": true,
+                "minimum": 4,
+                "maximum": 10
+            }
+        },
+        {
+            "name": "concentration",
+            "title": "the concentration of the compound in g/L.",
+            "type": "number",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "comment",
+            "title": "optional comment, not used",
+            "type": "string"
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+{
+    "fields": [
+        {
+            "name": "phase_start",
+            "title": "hours after 0 that the phase started",
+            "type": "number",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "phase_end",
+            "title": "hours after 0 that the phase ended",
+            "type": "number",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "parameter",
+            "title": "the parameter that was measured, e.g. yield, rate etc",
+            "type": "string",
+            "constraints": {
+                "enum": [
+                    "yield",
+                    "carbon-yield",
+                    "uptake",
+                    "production",
+                    "feed",
+                    "growth-rate",
+                    "relative-growth-rate",
+                    "uptake-rate",
+                    "production-rate",
+                    "gasflow-rate",
+                    "carbon-balance",
+                    "electron-balance",
+                    "concentration",
+                    "biomass",
+                    "temperature",
+                    "pH",
+                    "volume",
+                    "stirrer-speed"
+                ]
+            }
+        },
+        {
+            "name": "numerator_compound_name",
+            "title": "the quantity in the numerator, e.g. biomass, glucose etc",
+            "type": "string"
+        },
+        {
+            "name": "denominator_compound_name",
+            "title": "the quantity in the denominator, e.g. biomass, glucose etc",
+            "type": "string"
+        },
+        {
+            "name": "unit",
+            "title": "the unit of the measurement",
+            "type": "string",
+            "constraints": {
+                "enum": [
+                    "",
+                    "g CDW/L",
+                    "g CDW/mol",
+                    "mmol/gCDW",
+                    "mg/gCDW",
+                    "mg/gCDW",
+                    "h-1",
+                    "mmol/(gCDW*h)",
+                    "g/L",
+                    "mg/L",
+                    "Cmol/Cmol"
+                ]
+            }
+        }
+    ]
+}

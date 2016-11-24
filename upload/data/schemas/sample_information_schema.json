@@ -1,0 +1,113 @@
+{
+    "fields": [
+        {
+            "name": "project",
+            "title": "the iloop project identifier",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "experiment",
+            "title": "the iloop experiment identifier",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "reactor",
+            "title": "reactor identifier for given samples",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "operation",
+            "title": "arbitrary label with the main factor of interest",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "feed_medium",
+            "title": "the iloop medium name for the feed medium",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "batch_medium",
+            "title": "the iloop medium name for the batch medium",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "strain",
+            "title": "the iloop strain alias for the strain in this reactor",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "description",
+            "title": "experiment description",
+            "type": "string"
+        },
+        {
+            "name": "date",
+            "title": "starting date for the experiment",
+            "type": "date"
+        },
+        {
+            "name": "do",
+            "title": "do?",
+            "type": "string"
+        },
+        {
+            "name": "gas",
+            "title": "gas aeration",
+            "type": "string"
+        },
+        {
+            "name": "gasflow",
+            "title": "gas flow aeration in vvm",
+            "type": "string"
+        },
+        {
+            "name": "ph_set",
+            "title": "the target pH for the used medium",
+            "type": "number",
+            "constraints": {
+                "maximum": 10,
+                "minimum": 3
+            }
+        },
+        {
+            "name": "ph_correction",
+            "title": "pH calibration regent",
+            "type": "string"
+        },
+        {
+            "name": "stirrer",
+            "title": "stirrer revolutions",
+            "type": "number"
+        },
+        {
+            "name": "temperature",
+            "title": "temperature in celcius",
+            "type": "number",
+            "constraints": {
+                "maximum": 50,
+                "minimum": 0
+            }
+        }
+    ]
+}

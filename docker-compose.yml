@@ -1,0 +1,10 @@
+web:
+  build: .
+  dockerfile: Dockerfile
+  ports:
+    - 7000:7000
+  environment:
+    - PYTHONUNBUFFERED=1
+    - PYTHONASYNCIODEBUG=1
+    - ILOOP_TOKEN
+    - ILOOP_API

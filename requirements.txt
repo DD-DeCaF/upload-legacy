@@ -1,0 +1,12 @@
+aiohttp
+aiozmq
+aiohttp_cors
+potion_client
+requests
+codecov
+gnomic
+gunicorn
+pytest-cov
+pandas
+numpy
+git+https://github.com/frictionlessdata/goodtables-py.git#egg=goodtables

@@ -1,0 +1,5 @@
+pool,strain,genotype,parent,reference,organism
+NPC1,ST938-3,"*() bad genotype",scref,False,SCE
+NPC1,scref,,,True,SCE
+NPC1,bla-3,,ST938-3,False,SCE
+NPC1,foo-3,,bla-3,False,SCE

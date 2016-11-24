@@ -1,0 +1,26 @@
+phase_start,phase_end,parameter,numerator_compound_name,denominator_compound_name,unit,foo_A1,foo_A2,foo_A3,foo_B1,foo_B2,foo_B3
+0,29,yield,,glucose,g CDW/mol,1,1,1,1,1,1
+0,29,yield,glucose,,mmol/gCDW,2,2,2,2,2,2
+0,29,yield,co2,,mmol/gCDW,3,3,3,3,3,3
+0,29,yield,o2,,mmol/gCDW,4,4,4,4,4,4
+0,29,yield,succinate,,mg/gCDW,5,5,5,5,5,5
+0,29,yield,acetate,,mg/gCDW,6,6,6,6,6,6
+0,29,yield,ethanol,,mg/gCDW,7,7,7,7,7,7
+0,29,growth-rate,,,h-1,8,8,8,8,8,8
+0,29,uptake-rate,glucose,,mmol/(gCDW*h),9,9,9,9,9,9
+0,29,production-rate,co2,,mmol/(gCDW*h),10,10,10,10,10,10
+0,29,uptake-rate,o2,,mmol/(gCDW*h),11,11,11,11,11,11
+0,29,production-rate,succinate,,mmol/(gCDW*h),12,12,12,12,12,12
+0,29,production-rate,acetate,,mmol/(gCDW*h),13,13,13,13,13,13
+0,29,production-rate,ethanol,,mmol/(gCDW*h),14,14,14,14,14,14
+0,29,carbon-balance,glucose,,,15,15,15,15,15,15
+0,29,electron-balance,,,,16,16,16,16,16,16
+0,29,concentration,,,g CDW/L,17,17,17,17,17,17
+0,29,concentration,succinate,,mg/L,18,18,18,18,18,18
+0,29,carbon-yield,ethanol,,Cmol/Cmol,19,19,19,19,19,19
+0,29,carbon-yield,succinate,,Cmol/Cmol,20,20,20,20,20,20
+0,29,carbon-yield,pyruvate,,Cmol/Cmol,21,21,21,21,21,21
+0,29,carbon-yield,acetate,,Cmol/Cmol,22,22,22,22,22,22
+0,29,carbon-yield,co2,,Cmol/Cmol,23,23,23,23,23,23
+0,29,carbon-yield,o2,,Cmol/Cmol,24,24,24,24,24,24
+0,29,carbon-yield,glucose,,Cmol/Cmol,25,25,25,25,25,25
