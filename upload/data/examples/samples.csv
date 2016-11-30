@@ -1,7 +1,7 @@
 project,experiment,reactor,operation,feed_medium,batch_medium,strain,description,date,do,gas,gasflow,ph_set,ph_correction,stirrer,temperature
-NPC,foo,A1,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
-NPC,foo,A2,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
-NPC,foo,A3,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
-NPC,foo,B1,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
-NPC,foo,B2,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
-NPC,foo,B3,nothing,feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,A1,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,A2,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,A3,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,B1,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,B2,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+NPC,foo,B3,nothing,my-feed,my-batch,foo-3,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30

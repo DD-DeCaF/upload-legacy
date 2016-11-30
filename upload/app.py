@@ -1,13 +1,16 @@
 import asyncio
 from aiohttp import web
+import aiohttp_cors
 from upload import iloop_client, logger
 from upload.settings import Default
 from goodtables import check
 from functools import lru_cache
 import numpy as np
 import pandas as pd
+from pandas.io.common import CParserError
 import io
 import requests
+import json
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
 from upload.upload import MediaUploader, StrainsUploader, ExperimentUploader
 from tempfile import mkstemp
@@ -78,25 +81,34 @@ async def upload(request):
         project = iloop.Project.first(where={'code': data['project_id']})
     except requests.exceptions.HTTPError:
         raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier"}')
-    if 'strains' not in data and 'media' not in data and not ('samples' in data and 'physiology' in data):
+    if data['what'] not in ['strains', 'media', 'experiment']:
         raise web.HTTPBadRequest(text='{"status": "expected strains, media or samples/physiology component of post"}')
     uploader = None
+
     try:
-        if 'media' in data:
-            uploader = MediaUploader(project, write_temp_csv(data['media']),
+
+        if data['what'] == 'media':
+            content = data['file[0]'].file.read().decode()
+            uploader = MediaUploader(project, write_temp_csv(content),
                                      custom_checks=[compound_name_unknown],
                                      synonym_mapper=synonym_to_chebi_name)
-        if 'strains' in data:
-            uploader = StrainsUploader(project, write_temp_csv(data['strains']))
-        if 'samples' in data and 'physiology' in data:
-            uploader = ExperimentUploader(project, write_temp_csv(data['samples']),
-                                          write_temp_csv(data['physiology']),
+        if data['what'] == 'strains':
+            content = data['file[0]'].file.read().decode()
+            uploader = StrainsUploader(project, write_temp_csv(content))
+        if data['what'] == 'experiment':
+            content_samples = data['file[0]'].file.read().decode()
+            content_physiology = data['file[1]'].file.read().decode()
+            uploader = ExperimentUploader(project, write_temp_csv(content_samples),
+                                          write_temp_csv(content_physiology),
                                           custom_checks=[compound_name_unknown],
                                           synonym_mapper=synonym_to_chebi_name)
+    except CParserError:
+        return web.json_response(
+            data={'valid': False, 'tables': [{'errors': [{'message': 'failed to parse csv file '}]}]})
     except ValueError as error:
-        raise web.HTTPBadRequest(text=str(error))
+        return web.json_response(data=json.loads(str(error)))
     uploader.upload(iloop=iloop)
-    return web.json_response(data={'status': 'ok'})
+    return web.json_response(data={'valid': True})
 
 
 async def hello(request):
@@ -107,9 +119,22 @@ app = web.Application()
 app.router.add_route('POST', '/upload', upload)
 app.router.add_route('GET', '/hello', hello)
 
+# Configure default CORS settings.
+cors = aiohttp_cors.setup(app, defaults={
+    "*": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*",
+    )
+})
+
+# Configure CORS on all routes.
+for route in list(app.router.routes()):
+    cors.add(route)
+
 
 async def start(loop):
-    await loop.create_server(app.make_handler(), '0.0.0.0', 7000)
+    await loop.create_server(app.make_handler(), '0.0.0.0', 8000)
     logger.info('Web server is up')
 
 

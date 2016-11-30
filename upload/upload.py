@@ -193,7 +193,7 @@ class StrainsUploader(AbstractDataUploader):
     def upload(self, iloop):
         for item in self.iloop_args:
             try:
-                iloop.Strain.first(where={'alias': item['strain_alias']})
+                iloop.Strain.first(where={'alias': item['strain_alias'], 'project': item['project']})
             except ItemNotFound:
                 pool_object = iloop.Pool.first(where={'identifier': item['pool']})
                 if item['parent_strain_alias'] is not np.nan:
@@ -270,7 +270,9 @@ class ExperimentUploader(AbstractDataUploader):
         self.upload_physiology(iloop)
 
     def upload_experiment_info(self, iloop):
-        experiment_keys = [key for key, series in self.samples_df.iteritems() if series.nunique() == 1]
+        experiment_keys = ['project', 'experiment', 'description',
+                           'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction', 'stirrer', 'temperature']
+
         conditions_keys = list(set(self.samples_df.columns.values).difference(set(experiment_keys)))
         grouped_experiment = self.samples_df.groupby('experiment')
         for exp_id, experiment in grouped_experiment:
@@ -314,7 +316,7 @@ class ExperimentUploader(AbstractDataUploader):
                 row = assay.iloc[0].copy()
                 test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
                 a_scalar = {
-                    'measurements': {reactor.reactor: [reactor.value] for reactor in assay.itertuples()},
+                    'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
                     'test': deepcopy(test),
                     'phase': phase_object
                 }
