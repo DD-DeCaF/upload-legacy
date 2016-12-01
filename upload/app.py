@@ -14,6 +14,7 @@ import json
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
 from upload.upload import MediaUploader, StrainsUploader, ExperimentUploader
 from tempfile import mkstemp
+from upload import __version__
 
 iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
 
@@ -112,7 +113,7 @@ async def upload(request):
 
 
 async def hello(request):
-    return web.Response(text='hello....')
+    return web.Response(text='hi, this is upload v' + __version__)
 
 
 app = web.Application()
