@@ -18,4 +18,4 @@ def iloop_client(api, token):
     )
 
 __author__ = 'Henning Redestig'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
