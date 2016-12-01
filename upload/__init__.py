@@ -16,3 +16,6 @@ def iloop_client(api, token):
         auth=HTTPBearerAuth(token),
         verify=False
     )
+
+__author__ = 'Henning Redestig'
+__version__ = '0.0.2'

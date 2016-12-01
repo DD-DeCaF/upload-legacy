@@ -117,7 +117,7 @@ async def hello(request):
 
 app = web.Application()
 app.router.add_route('POST', '/upload', upload)
-app.router.add_route('GET', '/hello', hello)
+app.router.add_route('GET', '/upload/hello', hello)
 
 # Configure default CORS settings.
 cors = aiohttp_cors.setup(app, defaults={
