@@ -1,0 +1,3 @@
+phase_start,phase_end,parameter,numerator_compound_name,denominator_compound_name,unit,spam_A1,spam_A2
+0,29,yield,,glucose,g CDW/mol,1,1
+0,29,yield,glucose,,mmol/gCDW,2,2

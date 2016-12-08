@@ -14,4 +14,3 @@ class Default(object):
     ILOOP_API = ILOOP_API
     ILOOP_TOKEN = ILOOP_TOKEN
     NOT_PUBLIC = {'NPC'}
-

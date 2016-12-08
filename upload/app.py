@@ -3,69 +3,19 @@ from aiohttp import web
 import aiohttp_cors
 from upload import iloop_client, logger
 from upload.settings import Default
-from goodtables import check
-from functools import lru_cache
-import numpy as np
 import pandas as pd
 from pandas.io.common import CParserError
 import io
 import requests
 import json
-from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
 from upload.upload import MediaUploader, StrainsUploader, ExperimentUploader
 from tempfile import mkstemp
 from upload import __version__
+from potion_client.exceptions import ItemNotFound
+from upload.checks import compound_name_unknown, medium_name_unknown, strain_alias_unknown, \
+    experiment_identifier_unknown, synonym_to_chebi_name
 
 iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
-
-
-@check('compound-name-unknown', type='structure', context='body', after='duplicate-row')
-def compound_name_unknown(errors, columns, row_number, state):
-    """ checker logging if any columns with name containing 'compound_name' has rows with unknown compounds """
-    for column in columns:
-        if 'header' in column and 'compound_name' in column['header']:
-            try:
-                if column['value']:
-                    synonym_to_chebi_name(column['value'])
-            except ValueError:
-                message = (
-                    'Row {row_number} has unknown compound name "{value}" in column {column_number}, expected '
-                    'valid chebi name, see https://www.ebi.ac.uk/chebi/ ')
-                message = message.format(
-                    row_number=row_number,
-                    column_number=column['number'],
-                    value=column['value'])
-                errors.append({
-                    'code': 'bad-value',
-                    'message': message,
-                    'row-number': row_number,
-                    'column-number': column['number'],
-                })
-
-
-@lru_cache(maxsize=2 ** 16)
-def synonym_to_chebi_name(synonym):
-    """ map a synonym to a chebi name using iloop and a static ad-hoc lookup table
-
-    :param synonym: str, synonym for a compound
-    :return str: the chebi name of the (guessed) compound or COMPOUND_SKIP if the compound is to be ignored,
-    e.g. not tracked by iloop. missing values/nan return string 'nan'
-    """
-    if synonym == '' or synonym is np.nan:
-        return 'nan'
-    if synonym in skip_list:
-        return compound_skip
-    if synonym in synonym_to_chebi_name_dict:
-        synonym = synonym_to_chebi_name_dict[synonym]
-    elif synonym.lower() in synonym_to_chebi_name_dict:
-        synonym = synonym_to_chebi_name_dict[synonym.lower()]
-    compound = iloop.ChemicalEntity.instances(where={'chebi_name': synonym})
-    compound_lower = iloop.ChemicalEntity.instances(where={'chebi_name': synonym.lower()})
-    if len(compound) == 0 and len(compound_lower) > 0:
-        compound = compound_lower
-    if len(compound) != 1:
-        raise ValueError('failed to map {} to chebi'.format(synonym))
-    return compound[0].chebi_name
 
 
 def write_temp_csv(data_string):
@@ -101,15 +51,24 @@ async def upload(request):
             content_physiology = data['file[1]'].file.read().decode()
             uploader = ExperimentUploader(project, write_temp_csv(content_samples),
                                           write_temp_csv(content_physiology),
-                                          custom_checks=[compound_name_unknown],
+                                          custom_checks=[compound_name_unknown,
+                                                         experiment_identifier_unknown,
+                                                         medium_name_unknown,
+                                                         strain_alias_unknown],
                                           synonym_mapper=synonym_to_chebi_name)
     except CParserError:
         return web.json_response(
             data={'valid': False, 'tables': [{'errors': [{'message': 'failed to parse csv file '}]}]})
     except ValueError as error:
         return web.json_response(data=json.loads(str(error)))
-    uploader.upload(iloop=iloop)
-    return web.json_response(data={'valid': True})
+    try:
+        uploader.upload(iloop=iloop)
+    except ItemNotFound as error:
+        print('fooo')
+        return web.json_response(
+            data={'valid': False, 'tables': [{'errors': [{'message': str(error)}]}]})
+    else:
+        return web.json_response(data={'valid': True})
 
 
 async def hello(request):

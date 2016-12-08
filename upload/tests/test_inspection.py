@@ -34,11 +34,12 @@ def test_strains_inspection(examples):
     up = cup.StrainsUploader('TST', join(examples, 'strains.csv'))
     assert isinstance(up.df, pd.DataFrame)
     assert up.iloop_args[0]['strain_alias'] == 'scref'
-    assert up.iloop_args[1]['strain_alias'] == 'bla-3'
-    assert up.iloop_args[2]['strain_alias'] == 'foo-3'
+    assert up.iloop_args[1]['strain_alias'] == 'eggs'
+    assert up.iloop_args[2]['strain_alias'] == 'spam'
     with pytest.raises(ValueError) as excinfo:
         cup.StrainsUploader('TST', join(examples, 'strains-invalid.csv'))
     report = json.loads(str(excinfo.value))
+    print(report)
     assert report['error-count'] == 1
     error = report['tables'][0]['errors'].pop()
     assert 'bad expected gnomic' in error['message']

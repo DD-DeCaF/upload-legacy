@@ -2,3 +2,4 @@ pool,strain,genotype,parent,reference,organism
 TST1,scref,,,True,SCE
 TST1,spam,,eggs,False,SCE
 TST1,eggs,,scref,False,SCE
+TST1,ham,,elvis,False,SCE

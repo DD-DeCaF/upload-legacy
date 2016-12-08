@@ -1,0 +1,3 @@
+project,experiment,reactor,operation,feed_medium,batch_medium,strain,description,date,do,gas,gasflow,ph_set,ph_correction,stirrer,temperature
+TST,spam,A1,nothing,no-medium,no-medium,no-strain,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30
+TST,spam,A2,nothing,no-medium,no-medium,no-strain,just a test,2016-11-10,40% controlled,air + oxygen,1 vvm,5,NH4OH,800,30

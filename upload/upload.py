@@ -197,7 +197,12 @@ class StrainsUploader(AbstractDataUploader):
             except ItemNotFound:
                 pool_object = iloop.Pool.first(where={'identifier': item['pool']})
                 if item['parent_strain_alias'] is not np.nan:
-                    parent_object = iloop.Strain.first(where={'alias': item['parent_strain_alias']})
+                    try:
+                        print('here')
+                        parent_object = iloop.Strain.first(where={'alias': item['parent_strain_alias']})
+                    except ItemNotFound:
+                        print('..and here')
+                        raise ItemNotFound('missing strain %s' % item['parent_strain_alias'])
                 else:
                     parent_object = None
                 iloop.Strain.create(alias=item['strain_alias'],
@@ -227,7 +232,7 @@ class ExperimentUploader(AbstractDataUploader):
         super(ExperimentUploader, self).__init__(project)
         self.overwrite = overwrite
         self.samples_df = inspected_data_frame(samples_file_name,
-                                               'sample_information_schema.json')
+                                               'sample_information_schema.json', custom_checks=custom_checks)
         self.samples_df['sample_id'] = self.samples_df[['experiment', 'reactor']].apply(lambda x: '_'.join(x), axis=1)
         self.synonym_mapper = synonym_mapper
         sample_ids = self.samples_df['sample_id'].copy()
