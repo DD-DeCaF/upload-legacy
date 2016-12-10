@@ -19,10 +19,12 @@ from upload.checks import compound_name_unknown, medium_name_unknown, strain_ali
 def call_iloop_with_token(f):
     @wraps(f)
     async def wrapper(request):
-        token = Default.ILOOP_TOKEN
+        api, token = Default.ILOOP_API, Default.ILOOP_TOKEN
         if 'Authorization' in request.headers:
+            if 'Origin' in request.headers and 'cfb' in request.headers['Origin']:
+                api = Default.ILOOP_BIOSUSTAIN
             token = request.headers['Authorization'].replace('Bearer ', '')
-        iloop = iloop_client(Default.ILOOP_API, token)
+        iloop = iloop_client(api, token)
         return await f(request, iloop)
     return wrapper
 

@@ -13,4 +13,5 @@ ILOOP_TOKEN = os.environ.get('ILOOP_TOKEN') or config.get('defaults', 'token', f
 class Default(object):
     ILOOP_API = ILOOP_API
     ILOOP_TOKEN = ILOOP_TOKEN
+    ILOOP_BIOSUSTAIN = 'https://iloop.biosustain.dtu.dk/api'
     NOT_PUBLIC = {'NPC'}
