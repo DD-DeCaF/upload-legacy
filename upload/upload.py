@@ -38,6 +38,19 @@ def place_holder_compound_synonym_mapper(synonym):
     return synonym
 
 
+def get_schema(schema_name):
+    default_schemas = {'strains': 'strains_schema.json',
+                       'media': 'media_schema.json',
+                       'sample_information': 'sample_information_schema.json',
+                       'physiology': 'physiology_schema.json'}
+    schema_name = default_schemas[schema_name]
+    schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
+    schema = join(schema_dir, schema_name)
+    if not exists(schema):
+        raise FileNotFoundError('missing schema %s' % schema)
+    return schema
+
+
 class DataFrameInspector(object):
     """ class for inspecting a table and reading it to a DataFrame
 
@@ -49,10 +62,7 @@ class DataFrameInspector(object):
     """
 
     def __init__(self, file_name, schema_name, custom_checks=None):
-        schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
-        self.schema = join(schema_dir, schema_name) if not exists(schema_name) else schema_name
-        if not exists(self.schema):
-            raise FileNotFoundError('missing schema %s' % self.schema)
+        self.schema = get_schema(schema_name)
         self.file_name = file_name
         self.custom_checks = custom_checks if custom_checks else []
 
@@ -104,7 +114,7 @@ class MediaUploader(AbstractDataUploader):
 
     def __init__(self, project, file_name, custom_checks, synonym_mapper=place_holder_compound_synonym_mapper):
         super(MediaUploader, self).__init__(project)
-        self.df = inspected_data_frame(file_name, 'media_schema.json', custom_checks=custom_checks)
+        self.df = inspected_data_frame(file_name, 'media', custom_checks=custom_checks)
         self.iloop_args = []
         self.synonym_mapper = synonym_mapper
         self.prepare_upload()
@@ -162,32 +172,36 @@ class StrainsUploader(AbstractDataUploader):
 
     def __init__(self, project, file_name):
         super(StrainsUploader, self).__init__(project)
-        self.df = inspected_data_frame(file_name, 'strains_schema.json', custom_checks=[genotype_not_gnomic])
+        self.df = inspected_data_frame(file_name, 'strains', custom_checks=[genotype_not_gnomic])
         self.iloop_args = []
         self.prepare_upload()
 
     def prepare_upload(self):
-        def depth(df, i):
-            if df.loc[i].parent is np.nan:
+        def depth(df, i, key, key_parent):
+            if df.loc[i][key_parent] is np.nan:
                 return 0
             else:
                 try:
-                    return depth(df, df[df.strain == df.loc[i].parent].index[0]) + 1
+                    return depth(df, df[df[key] == df.loc[i][key_parent]].index[0], key, key_parent) + 1
                 except IndexError:
                     return 0  # parent assumed to already be defined
 
-        self.df['depth'] = [depth(self.df, i) for i in self.df.index]
-        self.df = self.df.sort_values(by='depth')
+        self.df['depth_pool'] = [depth(self.df, i, 'pool', 'parent_pool') for i in self.df.index]
+        self.df['depth_strain'] = [depth(self.df, i, 'strain', 'parent_strain') for i in self.df.index]
+        self.df = self.df.sort_values(by=['depth_pool', 'depth_strain'])
         for strain in self.df.itertuples():
-            genotype = '' if str(strain.genotype) == 'nan' else strain.genotype
+            genotype_pool = '' if str(strain.genotype_pool) == 'nan' else strain.genotype_pool
+            genotype_strain = '' if str(strain.genotype_strain) == 'nan' else strain.genotype_strain
             self.iloop_args.append({
+                'pool_alias': strain.pool,
+                'parent_pool_alias': strain.parent_pool,
+                'genotype_pool': genotype_pool,
                 'strain_alias': strain.strain,
-                'parent_strain_alias': strain.parent,
-                'pool': strain.pool,
-                'project': self.project,
+                'parent_strain_alias': strain.parent_strain,
+                'genotype': genotype_strain,
                 'is_reference': bool(strain.reference),
                 'organism': strain.organism,
-                'genotype': genotype
+                'project': self.project
             })
 
     def upload(self, iloop):
@@ -195,16 +209,25 @@ class StrainsUploader(AbstractDataUploader):
             try:
                 iloop.Strain.first(where={'alias': item['strain_alias'], 'project': item['project']})
             except ItemNotFound:
-                pool_object = iloop.Pool.first(where={'identifier': item['pool']})
+                try:
+                    pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
+                except ItemNotFound:
+                    parent_pool_object = None
+                    if item['parent_pool_alias'] is not np.nan:
+                        try:
+                            parent_pool_object = iloop.Pool.first(where={'identifier': item['parent_pool_alias']})
+                        except ItemNotFound:
+                            raise ItemNotFound('missing pool %s' % item['parent_strain_alias'])
+                    iloop.Pool.create(alias=item['pool_alias'],
+                                      parent_pool=parent_pool_object,
+                                      genotype=item['genotype_pool'])
+                    pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
+                parent_object = None
                 if item['parent_strain_alias'] is not np.nan:
                     try:
-                        print('here')
                         parent_object = iloop.Strain.first(where={'alias': item['parent_strain_alias']})
                     except ItemNotFound:
-                        print('..and here')
                         raise ItemNotFound('missing strain %s' % item['parent_strain_alias'])
-                else:
-                    parent_object = None
                 iloop.Strain.create(alias=item['strain_alias'],
                                     pool=pool_object,
                                     project=self.project,
@@ -215,6 +238,60 @@ class StrainsUploader(AbstractDataUploader):
 
 
 class ExperimentUploader(AbstractDataUploader):
+    """uploader for experiment data
+    """
+
+    def __init__(self, project, overwrite=True,
+                 synonym_mapper=place_holder_compound_synonym_mapper):
+        super(ExperimentUploader, self).__init__(project)
+        self.overwrite = overwrite
+        self.synonym_mapper = synonym_mapper
+        self.type = '..'
+        self.sample_name = '..'
+        self.experiment_keys = []
+        self.assay_cols = ['unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
+        self.samples_df = None
+        self.df = None
+
+    def extra_transformations(self):
+        self.df['numerator_chebi'] = self.df['numerator_compound_name'].apply(self.synonym_mapper)
+        self.df['denominator_chebi'] = self.df[
+            'denominator_compound_name'].apply(self.synonym_mapper)
+        self.df['test_id'] = self.df[self.assay_cols].apply(lambda x: '_'.join(str(i) for i in x), axis=1)
+        if self.df[['sample_id', 'test_id']].duplicated().any():
+            raise ValueError('found duplicated rows, should not have happened')
+
+    def upload(self, iloop):
+        pass
+
+    def upload_experiment_info(self, iloop):
+        conditions_keys = list(set(self.samples_df.columns.values).difference(set(self.experiment_keys)))
+        grouped_experiment = self.samples_df.groupby('experiment')
+        for exp_id, experiment in grouped_experiment:
+            exp_info = experiment[self.experiment_keys].drop_duplicates()
+            exp_info = next(exp_info.itertuples())
+            try:
+                existing = iloop.Experiment.first(where={'identifier': exp_id})
+                timestamp = existing.date.strftime('%Y-%m-%d')
+                if str(timestamp) != exp_info.date and not self.overwrite:
+                    raise ItemNotFound('existing mismatching experiment %s' % exp_id)
+                elif self.overwrite:
+                    existing.archive()
+                    raise ItemNotFound
+            except ItemNotFound:
+                sample_info = experiment[conditions_keys].set_index(self.sample_name)
+                conditions = _cast_non_str_to_float(experiment[self.experiment_keys].iloc[0].to_dict())
+                iloop.Experiment.create(project=self.project,
+                                        type=self.type,
+                                        identifier=exp_id,
+                                        date=datetime.strptime(exp_info.date, '%Y-%m-%d'),
+                                        description=exp_info.description,
+                                        attributes={'conditions': conditions,
+                                                    'operation': sample_info.to_dict()['operation'],
+                                                    'temperature': float(exp_info.temperature)})
+
+
+class FermentationUploader(ExperimentUploader):
     """uploader for experiment and sample descriptions and associated physiology data
 
     require two files, one that tabulates the information about an experiment and the samples associated with that
@@ -229,15 +306,17 @@ class ExperimentUploader(AbstractDataUploader):
 
     def __init__(self, project, samples_file_name, physiology_file_name, custom_checks, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
-        super(ExperimentUploader, self).__init__(project)
-        self.overwrite = overwrite
+        super(FermentationUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        self.type = 'fermentation'
+        self.sample_name = 'reactor'
+        self.experiment_keys = ['project', 'experiment', 'description',
+                                'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction', 'stirrer', 'temperature']
         self.samples_df = inspected_data_frame(samples_file_name,
-                                               'sample_information_schema.json', custom_checks=custom_checks)
+                                               'sample_information', custom_checks=custom_checks)
         self.samples_df['sample_id'] = self.samples_df[['experiment', 'reactor']].apply(lambda x: '_'.join(x), axis=1)
-        self.synonym_mapper = synonym_mapper
         sample_ids = self.samples_df['sample_id'].copy()
         sample_ids.sort_values(inplace=True)
-        physiology_validator = DataFrameInspector(physiology_file_name, 'physiology_schema.json',
+        physiology_validator = DataFrameInspector(physiology_file_name, 'physiology',
                                                   custom_checks=custom_checks)
         with open(physiology_validator.schema) as json_schema:
             physiology_schema = json.load(json_schema)
@@ -259,49 +338,11 @@ class ExperimentUploader(AbstractDataUploader):
                     var_name='sample_id')
                 .merge(self.samples_df[sample_cols], on='sample_id')
         )
-
-        self.df['numerator_chebi'] = self.df['numerator_compound_name'].apply(self.synonym_mapper)
-        self.df['denominator_chebi'] = self.df[
-            'denominator_compound_name'].apply(self.synonym_mapper)
-        assay_cols = ['unit', 'parameter', 'numerator_chebi',
-                      'denominator_chebi']
-        self.df['test_id'] = self.df[assay_cols].apply(
-            lambda x: '_'.join(str(i) for i in x), axis=1)
-        if self.df[['sample_id', 'test_id']].duplicated().any():
-            raise ValueError('found duplicated rows, should not have happened')
+        self.extra_transformations()
 
     def upload(self, iloop):
         self.upload_experiment_info(iloop)
         self.upload_physiology(iloop)
-
-    def upload_experiment_info(self, iloop):
-        experiment_keys = ['project', 'experiment', 'description',
-                           'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction', 'stirrer', 'temperature']
-
-        conditions_keys = list(set(self.samples_df.columns.values).difference(set(experiment_keys)))
-        grouped_experiment = self.samples_df.groupby('experiment')
-        for exp_id, experiment in grouped_experiment:
-            exp_info = experiment[experiment_keys].drop_duplicates()
-            exp_info = next(exp_info.itertuples())
-            try:
-                existing = iloop.Experiment.first(where={'identifier': exp_id})
-                timestamp = existing.date.strftime('%Y-%m-%d')
-                if str(timestamp) != exp_info.date and not self.overwrite:
-                    raise ValueError('existing mismatching experiment with same identifier')
-                elif self.overwrite:
-                    existing.archive()
-                    raise ItemNotFound
-            except ItemNotFound:
-                sample_info = experiment[conditions_keys].set_index('reactor')
-                conditions = _cast_non_str_to_float(experiment[experiment_keys].iloc[0].to_dict())
-                iloop.Experiment.create(project=self.project,
-                                        type='fermentation',
-                                        identifier=exp_id,
-                                        date=datetime.strptime(exp_info.date, '%Y-%m-%d'),
-                                        description=exp_info.description,
-                                        attributes={'conditions': conditions,
-                                                    'operation': sample_info.to_dict()['operation'],
-                                                    'temperature': float(exp_info.temperature)})
 
     def upload_physiology(self, iloop):
         for phase_num, phase in self.df.groupby(['phase_start', 'phase_end', 'experiment']):
@@ -334,6 +375,62 @@ class ExperimentUploader(AbstractDataUploader):
                     'strain': iloop.Strain.first(where={'alias': sample.strain}),
                     'medium': iloop.Medium.first(where={'name': sample.batch_medium}),
                     'feed_medium': iloop.Medium.first(where={'name': sample.feed_medium})
+                }
+            experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
+
+
+class ScreeningUploader(ExperimentUploader):
+    """uploader for screening data
+    """
+
+    def __init__(self, project, file_name, custom_checks, overwrite=True,
+                 synonym_mapper=place_holder_compound_synonym_mapper):
+        super(ScreeningUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
+        self.type = 'screening'
+        self.sample_name = 'well'
+        self.df = inspected_data_frame(file_name, 'screening', custom_checks=custom_checks)
+        self.df['barcode'] = self.df[['project', 'experiment', 'plate_name']].apply(lambda x: '_'.join(x), axis=1)
+        self.df['well'] = self.df[['row', 'col']].apply(lambda x: '_'.join(x), axis=1)
+        self.samples_df = self.df
+        self.extra_transformations()
+        # remove rows with missing values
+        self.df = self.df[self.df.value]
+
+    def upload(self, iloop):
+        self.upload_plates(iloop)
+        self.upload_screen(iloop)
+
+    def upload_plates(self, iloop):
+        plates_df = self.df.groupby(['plate', 'experiment']).drop_duplicates()
+        for plate_num, plate in plates_df:
+            experiment_object = iloop.Experiment.first(where={'identifier': plate.experiment.iloc[0]})
+            try:
+                iloop.Plate.first(where={'name': int(plate.plate_name.iloc[0]), 'experiment': experiment_object})
+            except ItemNotFound:
+                contents = plate[['well', 'medium', 'strain']].T.to_dict()
+                iloop.Plate.create(experiment=experiment_object, contents=contents, type=plate.plate_model[0])
+
+    def upload_screen(self, iloop):
+        for plate_num, plate in self.df.groupby(['plate', 'experiment']):
+            experiment_object = iloop.Experiment.first(where={'identifier': plate.experiment.iloc[0]})
+            plate_object = iloop.Plate.first(where={'name': int(plate.plate_name.iloc[0]),
+                                                    'experiment': experiment_object})
+            scalars = []
+            for test_id, assay in plate.groupby('test_id'):
+                row = assay.iloc[0].copy()
+                test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
+                a_scalar = {
+                    'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
+                    'test': deepcopy(test),
+                }
+                scalars.append(a_scalar)
+            sample_info = plate[['medium', 'well']].drop_duplicates()
+            sample_dict = {}
+            for sample in sample_info.itertuples():
+                sample_dict[sample.well] = {
+                    'plate': plate_object,
+                    'position': sample.well,
                 }
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 

@@ -1,0 +1,6 @@
+project,experiment,description,date,temperature,plate_model,plate,row,column,medium,strain,parameter,numerator_compound_name,denominator_compound_name,unit,value
+TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,1,my-batch,spam,biomass,,,g,0.5
+TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,2,my-batch,spam,biomass,,,g,0.3
+TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,3,my-batch,spam,biomass,,,g,0.1
+TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,4,my-batch,spam,biomass,,,g,0.01
+TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,5,my-batch,spam,biomass,,,g,0.8

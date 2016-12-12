@@ -1,4 +1,5 @@
-pool,strain,genotype,parent,reference,organism
-TST1,scref,,,True,SCE
-TST1,spam,,eggs,False,SCE
-TST1,eggs,,scref,False,SCE
+pool,genotype_pool,parent_pool,strain,genotype_strain,parent_strain,reference,organism
+test2,,test1,green,,scref,False,SCE
+test1,,,scref,,,True,SCE
+test1,,,spam,,eggs,False,SCE
+test1,,,eggs,,scref,False,SCE

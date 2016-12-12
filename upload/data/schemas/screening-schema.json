@@ -1,0 +1,155 @@
+{
+    "fields": [
+        {
+            "name": "project",
+            "title": "the iloop project identifier",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "experiment",
+            "title": "the iloop experiment identifier (new experiment created if not existing)",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "description",
+            "title": "experiment description",
+            "type": "string"
+        },
+        {
+            "name": "date",
+            "title": "starting date for the experiment",
+            "type": "date"
+        },
+        {
+            "name": "temperature",
+            "title": "temperature in celcius",
+            "type": "number",
+            "constraints": {
+                "maximum": 50,
+                "minimum": 0
+            }
+        }
+        {
+            "name": "plate_model",
+            "title": "the model of the plate",
+            "type": "string",
+            "constraints": {
+                "enum": [
+					"omnitray",
+					"6-well",
+					"24-well",
+					"48-well",
+					"48-flower",
+					"96-well",
+					"96-deep",
+					"96-pcr",
+					"384-well",
+					"384-semi-deep",
+					"96-rack"
+                ]
+            }
+        },
+        {
+            "name": "plate_name",
+            "title": "name of the plate, to identify the plate within this experiment",
+            "type": "string"
+			"required": true
+        },
+        {
+            "name": "row",
+            "title": "row identifier in plate",
+            "type": "string"
+			"pattern": "^[A-Z]$",
+			"required": true
+        },
+        {
+            "name": "column",
+            "title": "column identifier in plate",
+            "type": "string"
+			"pattern": "^[0-9]+$",
+			"required": true
+        },
+        {
+            "name": "medium",
+            "title": "the existing iloop name for the used medium",
+            "type": "string"
+			"required": true
+        },
+        {
+            "name": "strain",
+            "title": "the iloop existing strain alias for the strain in this reactor",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "parameter",
+            "title": "the parameter that was measured, e.g. yield, rate etc",
+            "type": "string",
+            "constraints": {
+                "enum": [
+                    "yield",
+                    "carbon-yield",
+                    "uptake",
+                    "production",
+                    "feed",
+                    "growth-rate",
+                    "relative-growth-rate",
+                    "uptake-rate",
+                    "production-rate",
+                    "gasflow-rate",
+                    "carbon-balance",
+                    "electron-balance",
+                    "concentration",
+                    "biomass",
+                    "temperature",
+                    "pH",
+                    "volume",
+                    "stirrer-speed"
+                ]
+            }
+        },
+        {
+            "name": "numerator_compound_name",
+            "title": "the quantity in the numerator, e.g. biomass, glucose etc",
+            "type": "string"
+        },
+        {
+            "name": "denominator_compound_name",
+            "title": "the quantity in the denominator, e.g. biomass, glucose etc",
+            "type": "string"
+        },
+        {
+            "name": "unit",
+            "title": "the unit of the measurement",
+            "type": "string",
+            "constraints": {
+                "enum": [
+                    "",
+                    "g CDW/L",
+                    "g CDW/mol",
+                    "mmol/gCDW",
+                    "mg/gCDW",
+                    "mg/gCDW",
+                    "h-1",
+                    "mmol/(gCDW*h)",
+                    "g/L",
+                    "mg/L",
+                    "Cmol/Cmol"
+                ]
+            }
+        },
+		{
+			"name": "value",
+			"title": "the measurement"
+			"type": "number",
+		}
+	]
+}

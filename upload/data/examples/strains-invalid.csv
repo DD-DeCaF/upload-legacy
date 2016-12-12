@@ -1,5 +1,5 @@
-pool,strain,genotype,parent,reference,organism
-TST,ST938-3,"*() bad genotype",scref,False,SCE
-TST,scref,,,True,SCE
-TST,bla-3,,ST938-3,False,SCE
-TST,foo-3,,bla-3,False,SCE
+pool,genotype_pool,parent_pool,strain,genotype_strain,parent_strain,reference,organism
+test2,"($ bad genotyp",test1,green,,scref,False,SCE
+test1,,,scref,,,True,SCE
+test1,,,spam,,eggs,False,SCE
+test1,,,eggs,,scref,False,SCE
