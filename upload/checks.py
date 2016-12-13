@@ -2,15 +2,11 @@ from functools import lru_cache
 from goodtables import check
 import numpy as np
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
-from upload import iloop_client
-from upload.settings import Default
 from potion_client.exceptions import ItemNotFound
-
-iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
 
 
 @lru_cache(maxsize=None)
-def synonym_to_chebi_name(synonym):
+def synonym_to_chebi_name(iloop, synonym):
     """ map a synonym to a chebi name using iloop and a static ad-hoc lookup table
 
     :param synonym: str, synonym for a compound
@@ -35,32 +31,28 @@ def synonym_to_chebi_name(synonym):
 
 
 @lru_cache(maxsize=None)
-def valid_experiment_identifier(identifier):
+def valid_experiment_identifier(iloop, identifier):
     iloop.Experiment.first(where={'identifier': identifier})
 
 
 @lru_cache(maxsize=None)
-def valid_strain_alias(alias):
+def valid_strain_alias(iloop, alias):
     iloop.Strain.first(where={'alias': alias})
 
 
 @lru_cache(maxsize=None)
-def valid_medium_name(name):
+def valid_medium_name(iloop, name):
     iloop.Medium.first(where={'name': name})
 
 
-@check('compound-name-unknown', type='structure', context='body', after='duplicate-row')
-def compound_name_unknown(errors, columns, row_number, state):
-    """ checker logging if any columns with name containing 'compound_name' has rows with unknown compounds """
+def identifier_unknown(iloop, entity, check_function, message,
+                       errors, columns, row_number):
     for column in columns:
-        if 'header' in column and 'compound_name' in column['header']:
+        if 'header' in column and entity in column['header']:
             try:
                 if column['value']:
-                    synonym_to_chebi_name(column['value'])
-            except ValueError:
-                message = (
-                    'Row {row_number} has unknown compound name "{value}" in column {column_number}, expected '
-                    'valid chebi name, see https://www.ebi.ac.uk/chebi/ ')
+                    check_function(iloop, column['value'])
+            except ItemNotFound:
                 message = message.format(
                     row_number=row_number,
                     column_number=column['number'],
@@ -71,72 +63,62 @@ def compound_name_unknown(errors, columns, row_number, state):
                     'row-number': row_number,
                     'column-number': column['number'],
                 })
+
+
+@check('compound-name-unknown', type='structure', context='body', after='duplicate-row')
+def compound_name_unknown(iloop, errors, columns, row_number, state):
+    """ checker logging if any columns with name containing 'compound_name' has rows with unknown compounds """
+    message = (
+        'Row {row_number} has unknown compound name "{value}" '
+        'in column {column_number}, expected '
+        'valid chebi name, see https://www.ebi.ac.uk/chebi/ '
+    )
+    identifier_unknown(
+        iloop,
+        'compound_name',
+        synonym_to_chebi_name,
+        message,
+        errors, columns, row_number
+    )
 
 
 @check('experiment-identifier-unknown', type='structure', context='body', after='duplicate-row')
-def experiment_identifier_unknown(errors, columns, row_number, state):
-    for column in columns:
-        if 'header' in column and 'experiment' in column['header']:
-            try:
-                if column['value']:
-                    valid_experiment_identifier(column['value'])
-            except ItemNotFound:
-                message = ('Row {row_number} has unknown experiment "{value}" '
-                           'in column {column_number} '
-                           'definition perhaps not uploaded yet')
-                message = message.format(
-                    row_number=row_number,
-                    column_number=column['number'],
-                    value=column['value'])
-                errors.append({
-                    'code': 'bad-value',
-                    'message': message,
-                    'row-number': row_number,
-                    'column-number': column['number'],
-                })
+def experiment_identifier_unknown(iloop, errors, columns, row_number, state):
+    message = ('Row {row_number} has unknown experiment "{value}" '
+               'in column {column_number} '
+               'definition perhaps not uploaded yet')
+    identifier_unknown(
+        iloop,
+        'experiment',
+        valid_experiment_identifier,
+        message,
+        errors, columns, row_number
+    )
 
 
 @check('strain-alias-unknown', type='structure', context='body', after='duplicate-row')
-def strain_alias_unknown(errors, columns, row_number, state):
-    for column in columns:
-        if 'header' in column and 'strain' in column['header']:
-            try:
-                if column['value']:
-                    valid_strain_alias(column['value'])
-            except ItemNotFound:
-                message = ('Row {row_number} has unknown strain alias "{value}" '
-                           'in column {column_number} '
-                           'definition perhaps not uploaded yet')
-                message = message.format(
-                    row_number=row_number,
-                    column_number=column['number'],
-                    value=column['value'])
-                errors.append({
-                    'code': 'bad-value',
-                    'message': message,
-                    'row-number': row_number,
-                    'column-number': column['number'],
-                })
+def strain_alias_unknown(iloop, errors, columns, row_number, state):
+    message = ('Row {row_number} has unknown strain alias "{value}" '
+               'in column {column_number} '
+               'definition perhaps not uploaded yet')
+    identifier_unknown(
+        iloop,
+        'strain',
+        valid_strain_alias,
+        message,
+        errors, columns, row_number
+    )
 
 
 @check('medium-name-unknown', type='structure', context='body', after='duplicate-row')
-def medium_name_unknown(errors, columns, row_number, state):
-    for column in columns:
-        if 'header' in column and 'medium' in column['header']:
-            try:
-                if column['value']:
-                    valid_medium_name(column['value'])
-            except ItemNotFound:
-                message = ('Row {row_number} has unknown medium name "{value}" '
-                           'in column {column_number} '
-                           'definition perhaps not uploaded yet ')
-                message = message.format(
-                    row_number=row_number,
-                    column_number=column['number'],
-                    value=column['value'])
-                errors.append({
-                    'code': 'bad-value',
-                    'message': message,
-                    'row-number': row_number,
-                    'column-number': column['number'],
-                })
+def medium_name_unknown(iloop, errors, columns, row_number, state):
+    message = ('Row {row_number} has unknown medium name "{value}" '
+               'in column {column_number} '
+               'definition perhaps not uploaded yet ')
+    identifier_unknown(
+        iloop,
+        'medium',
+        valid_medium_name,
+        message,
+        errors, columns, row_number
+    )
