@@ -379,13 +379,13 @@ class FermentationUploader(ExperimentUploader):
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
-class ScreeningUploader(ExperimentUploader):
+class ScreenUploader(ExperimentUploader):
     """uploader for screening data
     """
 
     def __init__(self, project, file_name, custom_checks, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
-        super(ScreeningUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        super(ScreenUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
         self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
         self.type = 'screening'
         self.sample_name = 'well'

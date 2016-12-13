@@ -8,7 +8,7 @@ from pandas.io.common import CParserError
 import io
 import requests
 import json
-from upload.upload import MediaUploader, StrainsUploader, FermentationUploader, ScreeningUploader, get_schema
+from upload.upload import MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader, get_schema
 from tempfile import mkstemp
 from upload import __version__
 from potion_client.exceptions import ItemNotFound
@@ -45,12 +45,12 @@ async def upload(request):
         if data['what'] == 'strains':
             content = data['file[0]'].file.read().decode()
             uploader = StrainsUploader(project, write_temp_csv(content))
-        if data['what'] == 'screening':
+        if data['what'] == 'screen':
             content = data['file[0]'].file.read().decode()
-            uploader = ScreeningUploader(project, write_temp_csv(content),
-                                         custom_checks=[compound_name_unknown, medium_name_unknown,
-                                                        strain_alias_unknown],
-                                         synonym_mapper=synonym_to_chebi_name)
+            uploader = ScreenUploader(project, write_temp_csv(content),
+                                      custom_checks=[compound_name_unknown, medium_name_unknown,
+                                                     strain_alias_unknown],
+                                      synonym_mapper=synonym_to_chebi_name)
         if data['what'] == 'fermentation':
             content_samples = data['file[0]'].file.read().decode()
             content_physiology = data['file[1]'].file.read().decode()
