@@ -20,7 +20,8 @@ def get_schema(schema_name):
     default_schemas = {'strains': 'strains_schema.json',
                        'media': 'media_schema.json',
                        'sample_information': 'sample_information_schema.json',
-                       'physiology': 'physiology_schema.json'}
+                       'physiology': 'physiology_schema.json',
+                       'screen': 'screen_schema.json'}
     schema_name = default_schemas[schema_name]
     schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
     schema = join(schema_dir, schema_name)
@@ -156,7 +157,7 @@ class StrainsUploader(AbstractDataUploader):
 
     def prepare_upload(self):
         def depth(df, i, key, key_parent):
-            if df.loc[i][key_parent] is np.nan:
+            if _isnan(df.loc[i][key_parent]):
                 return 0
             else:
                 try:
@@ -188,20 +189,21 @@ class StrainsUploader(AbstractDataUploader):
                 iloop.Strain.first(where={'alias': item['strain_alias'], 'project': item['project']})
             except ItemNotFound:
                 try:
-                    pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
+                    pool_object = iloop.Pool.first(where={'alias': item['pool_alias']})
                 except ItemNotFound:
                     parent_pool_object = None
-                    if item['parent_pool_alias'] is not np.nan:
+                    if not _isnan(item['parent_pool_alias']):
                         try:
                             parent_pool_object = iloop.Pool.first(where={'identifier': item['parent_pool_alias']})
                         except ItemNotFound:
                             raise ItemNotFound('missing pool %s' % item['parent_strain_alias'])
                     iloop.Pool.create(alias=item['pool_alias'],
+                                      project=self.project,
                                       parent_pool=parent_pool_object,
                                       genotype=item['genotype_pool'])
-                    pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
+                    pool_object = iloop.Pool.first(where={'alias': item['pool_alias']})
                 parent_object = None
-                if item['parent_strain_alias'] is not np.nan:
+                if not _isnan(item['parent_strain_alias']):
                     try:
                         parent_object = iloop.Strain.first(where={'alias': item['parent_strain_alias']})
                     except ItemNotFound:
@@ -227,14 +229,13 @@ class ExperimentUploader(AbstractDataUploader):
         self.type = '..'
         self.sample_name = '..'
         self.experiment_keys = []
-        self.assay_cols = ['unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
+        self.assay_cols = ['phase_start', 'phase_end', 'unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
         self.samples_df = None
         self.df = None
 
     def extra_transformations(self):
         self.df['numerator_chebi'] = self.df['numerator_compound_name'].apply(self.synonym_mapper)
-        self.df['denominator_chebi'] = self.df[
-            'denominator_compound_name'].apply(self.synonym_mapper)
+        self.df['denominator_chebi'] = self.df['denominator_compound_name'].apply(self.synonym_mapper)
         self.df['test_id'] = self.df[self.assay_cols].apply(lambda x: '_'.join(str(i) for i in x), axis=1)
         if self.df[['sample_id', 'test_id']].duplicated().any():
             raise ValueError('found duplicated rows, should not have happened')
@@ -259,6 +260,7 @@ class ExperimentUploader(AbstractDataUploader):
             except ItemNotFound:
                 sample_info = experiment[conditions_keys].set_index(self.sample_name)
                 conditions = _cast_non_str_to_float(experiment[self.experiment_keys].iloc[0].to_dict())
+                conditions = {key: value for key, value in conditions.items() if not _isnan(value)}
                 iloop.Experiment.create(project=self.project,
                                         type=self.type,
                                         identifier=exp_id,
@@ -287,15 +289,13 @@ class FermentationUploader(ExperimentUploader):
         super(FermentationUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
         self.type = 'fermentation'
         self.sample_name = 'reactor'
-        self.experiment_keys = ['project', 'experiment', 'description',
-                                'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction', 'stirrer', 'temperature']
-        self.samples_df = inspected_data_frame(samples_file_name,
-                                               'sample_information', custom_checks=custom_checks)
+        self.experiment_keys = ['experiment', 'description', 'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction',
+                                'stirrer', 'temperature']
+        self.samples_df = inspected_data_frame(samples_file_name, 'sample_information', custom_checks=custom_checks)
         self.samples_df['sample_id'] = self.samples_df[['experiment', 'reactor']].apply(lambda x: '_'.join(x), axis=1)
         sample_ids = self.samples_df['sample_id'].copy()
         sample_ids.sort_values(inplace=True)
-        physiology_validator = DataFrameInspector(physiology_file_name, 'physiology',
-                                                  custom_checks=custom_checks)
+        physiology_validator = DataFrameInspector(physiology_file_name, 'physiology', custom_checks=custom_checks)
         with open(physiology_validator.schema) as json_schema:
             physiology_schema = json.load(json_schema)
         for sample_id in sample_ids:
@@ -323,30 +323,11 @@ class FermentationUploader(ExperimentUploader):
         self.upload_physiology(iloop)
 
     def upload_physiology(self, iloop):
-        for phase_num, phase in self.df.groupby(['phase_start', 'phase_end', 'experiment']):
-            experiment_object = iloop.Experiment.first(where={'identifier': phase.experiment.iloc[0]})
-            try:
-                phase_object = iloop.ExperimentPhase.first(where={'start': int(phase.phase_start.iloc[0]),
-                                                                  'end': int(phase.phase_end.iloc[0]),
-                                                                  'experiment': experiment_object})
-            except ItemNotFound:
-                phase_object = iloop.ExperimentPhase.create(experiment=experiment_object,
-                                                            start=int(phase.phase_start.iloc[0]),
-                                                            end=int(phase.phase_end.iloc[0]),
-                                                            title='{}__{}'.format(phase.phase_start.iloc[0],
-                                                                                  phase.phase_end.iloc[0]))
+        for exp_id, experiment in self.df.groupby(['experiment']):
             scalars = []
-            for test_id, assay in phase.groupby('test_id'):
-                row = assay.iloc[0].copy()
-                test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
-                a_scalar = {
-                    'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
-                    'test': deepcopy(test),
-                    'phase': phase_object
-                }
-                scalars.append(a_scalar)
-            sample_info = phase[['feed_medium', 'batch_medium', 'reactor', 'strain']].drop_duplicates()
             sample_dict = {}
+            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            sample_info = experiment[['feed_medium', 'batch_medium', 'reactor', 'strain']].drop_duplicates()
             for sample in sample_info.itertuples():
                 sample_dict[sample.reactor] = {
                     'name': sample.reactor,
@@ -354,6 +335,27 @@ class FermentationUploader(ExperimentUploader):
                     'medium': iloop.Medium.first(where={'name': sample.batch_medium}),
                     'feed_medium': iloop.Medium.first(where={'name': sample.feed_medium})
                 }
+            for phase_num, phase in experiment.groupby(['phase_start', 'phase_end']):
+                try:
+                    phase_object = iloop.ExperimentPhase.first(where={'start': int(phase.phase_start.iloc[0]),
+                                                                      'end': int(phase.phase_end.iloc[0]),
+                                                                      'experiment': experiment_object})
+                except ItemNotFound:
+                    phase_object = iloop.ExperimentPhase.create(experiment=experiment_object,
+                                                                start=int(phase.phase_start.iloc[0]),
+                                                                end=int(phase.phase_end.iloc[0]),
+                                                                title='{}__{}'.format(phase.phase_start.iloc[0],
+                                                                                      phase.phase_end.iloc[0]))
+
+                for test_id, assay in phase.groupby('test_id'):
+                    row = assay.iloc[0].copy()
+                    test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
+                    a_scalar = {
+                        'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
+                        'test': deepcopy(test),
+                        'phase': phase_object
+                    }
+                    scalars.append(a_scalar)
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
@@ -418,3 +420,9 @@ def _cast_non_str_to_float(dictionary):
         if not isinstance(dictionary[key], str):
             dictionary[key] = float(dictionary[key])
     return dictionary
+
+
+def _isnan(value):
+    if isinstance(value, str):
+        return False
+    return np.isnan(value)
