@@ -34,7 +34,7 @@
                 "maximum": 50,
                 "minimum": 0
             }
-        }
+        },
         {
             "name": "plate_model",
             "title": "the model of the plate",
@@ -58,27 +58,27 @@
         {
             "name": "plate_name",
             "title": "name of the plate, to identify the plate within this experiment",
-            "type": "string"
+            "type": "string",
 			"required": true
         },
         {
             "name": "row",
             "title": "row identifier in plate",
-            "type": "string"
+            "type": "string",
 			"pattern": "^[A-Z]$",
 			"required": true
         },
         {
             "name": "column",
             "title": "column identifier in plate",
-            "type": "string"
+            "type": "string",
 			"pattern": "^[0-9]+$",
 			"required": true
         },
         {
             "name": "medium",
             "title": "the existing iloop name for the used medium",
-            "type": "string"
+            "type": "string",
 			"required": true
         },
         {
@@ -148,8 +148,8 @@
         },
 		{
 			"name": "value",
-			"title": "the measurement"
-			"type": "number",
+			"title": "the measurement",
+			"type": "number"
 		}
 	]
 }

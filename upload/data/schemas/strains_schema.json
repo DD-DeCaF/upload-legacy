@@ -39,16 +39,22 @@
     {
       "name": "reference",
       "title": "is strain a reference or not",
-      "type": "boolean"
+      "type": "boolean",
+      "constraints": {
+        "required": true
+      }
     },
     {
       "name": "organism",
       "title": "the organism/species of the strain",
       "type": "string",
-      "enum": [
-        "SCE",
-        "ECO"
-      ]
+      "constraints": {
+        "required": true,
+        "enum": [
+          "SCE",
+          "ECO"
+        ]
+      }
     }
   ],
   "foreignKeys": [
