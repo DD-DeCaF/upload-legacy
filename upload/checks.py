@@ -1,8 +1,15 @@
-from functools import lru_cache
+from functools import lru_cache, partial
 from goodtables import check
 import numpy as np
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
 from potion_client.exceptions import ItemNotFound
+import gnomic
+
+
+def check_safe_partial(func, *args, **keywords):
+    new_function = partial(func, *args, **keywords)
+    new_function.check = func.check
+    return new_function
 
 
 @lru_cache(maxsize=None)
@@ -45,6 +52,28 @@ def valid_medium_name(iloop, name):
     iloop.Medium.first(where={'name': name})
 
 
+@check('genotype-not-gnomic', type='structure', context='body', after='duplicate-row')
+def genotype_not_gnomic(errors, columns, row_number, state):
+    """ checker logging if any columns named genotype have rows with non-gnomic strings """
+    gnomic_parser = gnomic.GnomicParser()
+    for column in columns:
+        if 'header' in column and 'genotype' in column['header']:
+            try:
+                gnomic_parser.parse(column['value'])
+            except gnomic.GrakoException:
+                message = 'Row {row_number} has bad expected gnomic string "{value}" in column {column_number}'
+                message = message.format(
+                    row_number=row_number,
+                    column_number=column['number'],
+                    value=column['value'])
+                errors.append({
+                    'code': 'bad-value',
+                    'message': message,
+                    'row-number': row_number,
+                    'column-number': column['number'],
+                })
+
+
 def identifier_unknown(iloop, entity, check_function, message,
                        errors, columns, row_number):
     for column in columns:
@@ -52,7 +81,7 @@ def identifier_unknown(iloop, entity, check_function, message,
             try:
                 if column['value']:
                     check_function(iloop, column['value'])
-            except ItemNotFound:
+            except (ValueError, ItemNotFound):
                 message = message.format(
                     row_number=row_number,
                     column_number=column['number'],

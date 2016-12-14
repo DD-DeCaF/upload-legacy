@@ -13,7 +13,7 @@ from potion_client.exceptions import ItemNotFound
 from upload import iloop_client, __version__, logger
 from upload.settings import Default
 from upload.checks import compound_name_unknown, medium_name_unknown, strain_alias_unknown, \
-    experiment_identifier_unknown, synonym_to_chebi_name
+    experiment_identifier_unknown, synonym_to_chebi_name, check_safe_partial
 
 
 def call_iloop_with_token(f):
@@ -38,6 +38,12 @@ def write_temp_csv(data_string):
 
 
 @call_iloop_with_token
+async def list_projects(request, iloop):
+    projects = [{'display': project.name, 'value': project.code} for project in iloop.Project.instances()]
+    return web.json_response(data=projects)
+
+
+@call_iloop_with_token
 async def upload(request, iloop):
     data = await request.post()
     try:
@@ -52,7 +58,7 @@ async def upload(request, iloop):
         if data['what'] == 'media':
             content = data['file[0]'].file.read().decode()
             uploader = MediaUploader(project, write_temp_csv(content),
-                                     custom_checks=[partial(compound_name_unknown, iloop)],
+                                     custom_checks=[check_safe_partial(compound_name_unknown, iloop)],
                                      synonym_mapper=partial(synonym_to_chebi_name, iloop))
         if data['what'] == 'strains':
             content = data['file[0]'].file.read().decode()
@@ -60,19 +66,18 @@ async def upload(request, iloop):
         if data['what'] == 'screen':
             content = data['file[0]'].file.read().decode()
             uploader = ScreenUploader(project, write_temp_csv(content),
-                                      custom_checks=[partial(compound_name_unknown, iloop),
-                                                     partial(medium_name_unknown, iloop),
-                                                     partial(strain_alias_unknown, iloop)],
+                                      custom_checks=[check_safe_partial(compound_name_unknown, iloop),
+                                                     check_safe_partial(medium_name_unknown, iloop),
+                                                     check_safe_partial(strain_alias_unknown, iloop)],
                                       synonym_mapper=partial(synonym_to_chebi_name, iloop))
         if data['what'] == 'fermentation':
             content_samples = data['file[0]'].file.read().decode()
             content_physiology = data['file[1]'].file.read().decode()
             uploader = FermentationUploader(project, write_temp_csv(content_samples),
                                             write_temp_csv(content_physiology),
-                                            custom_checks=[partial(compound_name_unknown, iloop),
-                                                           partial(experiment_identifier_unknown, iloop),
-                                                           partial(medium_name_unknown, iloop),
-                                                           partial(strain_alias_unknown, iloop)],
+                                            custom_checks=[check_safe_partial(compound_name_unknown, iloop),
+                                                           check_safe_partial(medium_name_unknown, iloop),
+                                                           check_safe_partial(strain_alias_unknown, iloop)],
                                             synonym_mapper=partial(synonym_to_chebi_name, iloop))
     except CParserError:
         return web.json_response(
@@ -81,7 +86,7 @@ async def upload(request, iloop):
         return web.json_response(data=json.loads(str(error)))
     try:
         uploader.upload(iloop=iloop)
-    except ItemNotFound as error:
+    except (ItemNotFound, requests.exceptions.HTTPError)as error:
         return web.json_response(
             data={'valid': False, 'tables': [{'errors': [{'message': str(error)}]}]})
     else:
@@ -91,8 +96,11 @@ async def upload(request, iloop):
 async def hello(request):
     return web.Response(text='hi, this is upload v' + __version__)
 
+
 async def schema(request):
-    what = request.match_info.get('schema', 'strains')
+    what = request.match_info.get('what', None)
+    if not what:
+        raise ValueError('bad schema request')
     with open(get_schema(what)) as schema_file:
         schema_object = json.load(schema_file)
     return web.json_response(data=schema_object)
@@ -100,9 +108,9 @@ async def schema(request):
 ROUTE_CONFIG = [
     ('POST', '/upload', upload),
     ('GET', '/upload/hello', hello),
+    ('GET', '/upload/list_projects', list_projects),
     ('GET', '/upload/schema/{what}', schema),
 ]
-
 
 app = web.Application()
 # Configure default CORS settings.
@@ -117,7 +125,7 @@ cors = aiohttp_cors.setup(app, defaults={
 for method, path, handler in ROUTE_CONFIG:
     resource = app.router.add_resource(path)
     cors.add(resource)
-    cors.add(resource.add_route("GET", handler))
+    cors.add(resource.add_route(method, handler))
 
 
 async def start(loop):

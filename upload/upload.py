@@ -2,36 +2,14 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from potion_client.exceptions import ItemNotFound
-from goodtables import Inspector, check
+from goodtables import Inspector
 import json
 from os.path import abspath, dirname, join, exists
-import gnomic
 from requests import HTTPError
 from copy import deepcopy
 
 from upload.constants import measurement_test, compound_skip
-
-
-@check('genotype-not-gnomic', type='structure', context='body', after='duplicate-row')
-def genotype_not_gnomic(errors, columns, row_number, state):
-    """ checker logging if any columns named genotype have rows with non-gnomic strings """
-    gnomic_parser = gnomic.GnomicParser()
-    for column in columns:
-        if 'header' in column and column['header'] == 'genotype':
-            try:
-                gnomic_parser.parse(column['value'])
-            except gnomic.GrakoException:
-                message = 'Row {row_number} has bad expected gnomic string "{value}" in column {column_number}'
-                message = message.format(
-                    row_number=row_number,
-                    column_number=column['number'],
-                    value=column['value'])
-                errors.append({
-                    'code': 'bad-value',
-                    'message': message,
-                    'row-number': row_number,
-                    'column-number': column['number'],
-                })
+from upload.checks import genotype_not_gnomic
 
 
 def place_holder_compound_synonym_mapper(synonym):
