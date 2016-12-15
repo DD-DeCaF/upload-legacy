@@ -72,6 +72,6 @@ def test_fermentation_inspection_with_iloop(examples):
                                       partial(compound_name_unknown, iloop, None),
                                       partial(medium_name_unknown, iloop, None),
                                       partial(strain_alias_unknown, iloop, project)],
-                                  synonym_mapper=partial(synonym_to_chebi_name, iloop))
+                                  synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
     assert isinstance(up.samples_df, pd.DataFrame)
     assert isinstance(up.physiology_df, pd.DataFrame)
