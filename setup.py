@@ -21,7 +21,7 @@ test_requirements = [
 
 setup(
     name='upload',
-    version='0.2.0',
+    version='0.2.1',
     description="uploading data to iloop for dd-decaf",
     long_description=readme,
     author="Henning Redestig",
