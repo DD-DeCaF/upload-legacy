@@ -1,7 +1,6 @@
 from functools import lru_cache, partial
 from goodtables import check
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
-from upload import _isnan
 from potion_client.exceptions import ItemNotFound
 import gnomic
 
@@ -13,10 +12,12 @@ def check_safe_partial(func, *args, **keywords):
 
 
 @lru_cache(maxsize=None)
-def synonym_to_chebi_name(iloop, synonym):
+def synonym_to_chebi_name(iloop, project, synonym):
     """ map a synonym to a chebi name using iloop and a static ad-hoc lookup table
 
     :param synonym: str, synonym for a compound
+    :param iloop: the iloop object to call
+    :param project: ignored, necessary for symmetry with other lookup functions
     :return str: the chebi name of the (guessed) compound or COMPOUND_SKIP if the compound is to be ignored,
     e.g. not tracked by iloop. missing values/nan return string 'nan'
     """
@@ -102,7 +103,7 @@ def compound_name_unknown(iloop, project, errors, columns, row_number, state):
     )
     identifier_unknown(
         iloop,
-        project,
+        None,
         'compound_name',
         synonym_to_chebi_name,
         message,
@@ -147,7 +148,7 @@ def medium_name_unknown(iloop, project, errors, columns, row_number, state):
                'definition perhaps not uploaded yet ')
     identifier_unknown(
         iloop,
-        project,
+        None,
         'medium',
         valid_medium_name,
         message,
