@@ -194,7 +194,7 @@ class StrainsUploader(AbstractDataUploader):
                     parent_pool_object = None
                     if not _isnan(item['parent_pool_alias']):
                         try:
-                            parent_pool_object = iloop.Pool.first(where={'identifier': item['parent_pool_alias']})
+                            parent_pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
                         except ItemNotFound:
                             raise ItemNotFound('missing pool %s' % item['parent_strain_alias'])
                     iloop.Pool.create(alias=item['pool_alias'],
