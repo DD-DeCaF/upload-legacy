@@ -1,14 +1,6 @@
 {
     "fields": [
         {
-            "name": "project",
-            "title": "the iloop project identifier",
-            "type": "string",
-            "constraints": {
-                "required": true
-            }
-        },
-        {
             "name": "experiment",
             "title": "the iloop experiment identifier (new experiment created if not existing)",
             "type": "string",
@@ -60,6 +52,14 @@
             "title": "name of the plate, to identify the plate within this experiment",
             "type": "string",
 			"required": true
+        },
+        {
+            "name": "operation",
+            "title": "arbitrary label with the main factor of interest",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "row",
@@ -136,7 +136,6 @@
                     "g CDW/L",
                     "g CDW/mol",
                     "mmol/gCDW",
-                    "mg/gCDW",
                     "mg/gCDW",
                     "h-1",
                     "mmol/(gCDW*h)",

@@ -50,7 +50,7 @@ async def upload(request, iloop):
         project = iloop.Project.first(where={'code': data['project_id']})
     except requests.exceptions.HTTPError:
         raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier"}')
-    if data['what'] not in ['strains', 'media', 'fermentation', 'screening']:
+    if data['what'] not in ['strains', 'media', 'fermentation', 'screen']:
         raise web.HTTPBadRequest(text='{"status": "expected strains, media or samples/physiology component of post"}')
     uploader = None
 
@@ -58,7 +58,7 @@ async def upload(request, iloop):
         if data['what'] == 'media':
             content = data['file[0]'].file.read().decode()
             uploader = MediaUploader(project, write_temp_csv(content),
-                                     custom_checks=[check_safe_partial(compound_name_unknown, iloop)],
+                                     custom_checks=[check_safe_partial(compound_name_unknown, iloop, project)],
                                      synonym_mapper=partial(synonym_to_chebi_name, iloop))
         if data['what'] == 'strains':
             content = data['file[0]'].file.read().decode()
@@ -66,18 +66,18 @@ async def upload(request, iloop):
         if data['what'] == 'screen':
             content = data['file[0]'].file.read().decode()
             uploader = ScreenUploader(project, write_temp_csv(content),
-                                      custom_checks=[check_safe_partial(compound_name_unknown, iloop),
-                                                     check_safe_partial(medium_name_unknown, iloop),
-                                                     check_safe_partial(strain_alias_unknown, iloop)],
+                                      custom_checks=[check_safe_partial(compound_name_unknown, iloop, project),
+                                                     check_safe_partial(medium_name_unknown, iloop, project),
+                                                     check_safe_partial(strain_alias_unknown, iloop, project)],
                                       synonym_mapper=partial(synonym_to_chebi_name, iloop))
         if data['what'] == 'fermentation':
             content_samples = data['file[0]'].file.read().decode()
             content_physiology = data['file[1]'].file.read().decode()
             uploader = FermentationUploader(project, write_temp_csv(content_samples),
                                             write_temp_csv(content_physiology),
-                                            custom_checks=[check_safe_partial(compound_name_unknown, iloop),
-                                                           check_safe_partial(medium_name_unknown, iloop),
-                                                           check_safe_partial(strain_alias_unknown, iloop)],
+                                            custom_checks=[check_safe_partial(compound_name_unknown, iloop, project),
+                                                           check_safe_partial(medium_name_unknown, iloop, project),
+                                                           check_safe_partial(strain_alias_unknown, iloop, project)],
                                             synonym_mapper=partial(synonym_to_chebi_name, iloop))
     except CParserError:
         return web.json_response(

@@ -1,6 +1,6 @@
-project,experiment,description,date,temperature,plate_model,plate,row,column,medium,strain,parameter,numerator_compound_name,denominator_compound_name,unit,value
-TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,1,my-batch,spam,biomass,,,g,0.5
-TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,2,my-batch,spam,biomass,,,g,0.3
-TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,3,my-batch,spam,biomass,,,g,0.1
-TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,4,my-batch,spam,biomass,,,g,0.01
-TST,screen1,test-screen,2016-11-10,30,96-well,plate1,A,5,my-batch,spam,biomass,,,g,0.8
+experiment,description,date,temperature,plate_model,plate_name,operation,row,column,medium,strain,parameter,numerator_compound_name,denominator_compound_name,unit,value
+screen1,test-screen,2016-11-10,30,96-well,plate1,c-sufficient,A,1,screen-media,spam,biomass,,,g/L,0.5
+screen1,test-screen,2016-11-10,30,96-well,plate1,c-sufficient,A,2,screen-media,spam,biomass,,,g/L,0.3
+screen1,test-screen,2016-11-10,30,96-well,plate1,c-deficient,A,3,screen-media,spam,biomass,,,g/L,0.1
+screen1,test-screen,2016-11-10,30,96-well,plate1,c-deficient,A,4,screen-media,spam,biomass,,,g/L,0.01
+screen1,test-screen,2016-11-10,30,96-well,plate1,c-deficient,A,5,screen-media,spam,biomass,,,g/L,0.8

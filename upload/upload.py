@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from datetime import datetime
 from potion_client.exceptions import ItemNotFound
 from goodtables import Inspector
@@ -10,6 +9,7 @@ from copy import deepcopy
 
 from upload.constants import measurement_test, compound_skip
 from upload.checks import genotype_not_gnomic
+from upload import _isnan
 
 
 def place_holder_compound_synonym_mapper(synonym):
@@ -229,7 +229,7 @@ class ExperimentUploader(AbstractDataUploader):
         self.type = '..'
         self.sample_name = '..'
         self.experiment_keys = []
-        self.assay_cols = ['phase_start', 'phase_end', 'unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
+        self.assay_cols = ['unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
         self.samples_df = None
         self.df = None
 
@@ -287,6 +287,7 @@ class FermentationUploader(ExperimentUploader):
     def __init__(self, project, samples_file_name, physiology_file_name, custom_checks, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
         super(FermentationUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        self.assay_cols.extend(['phase_start', 'phase_end'])
         self.type = 'fermentation'
         self.sample_name = 'reactor'
         self.experiment_keys = ['experiment', 'description', 'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction',
@@ -369,49 +370,63 @@ class ScreenUploader(ExperimentUploader):
         self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
         self.type = 'screening'
         self.sample_name = 'well'
-        self.df = inspected_data_frame(file_name, 'screening', custom_checks=custom_checks)
+        self.df = inspected_data_frame(file_name, 'screen', custom_checks=custom_checks)
+        self.df['project'] = self.project.code
         self.df['barcode'] = self.df[['project', 'experiment', 'plate_name']].apply(lambda x: '_'.join(x), axis=1)
-        self.df['well'] = self.df[['row', 'col']].apply(lambda x: '_'.join(x), axis=1)
+        self.df['well'] = self.df[['row', 'column']].apply(lambda x: ''.join(str(y) for y in x), axis=1)
+        self.df['sample_id'] = self.df[['barcode', 'well']].apply(lambda x: '_'.join(x), axis=1)
         self.samples_df = self.df
+        self.df.dropna(0, subset=['value'], inplace=True)
         self.extra_transformations()
-        # remove rows with missing values
-        self.df = self.df[self.df.value]
 
     def upload(self, iloop):
+        self.upload_experiment_info(iloop)
         self.upload_plates(iloop)
         self.upload_screen(iloop)
 
     def upload_plates(self, iloop):
-        plates_df = self.df.groupby(['plate', 'experiment']).drop_duplicates()
-        for plate_num, plate in plates_df:
-            experiment_object = iloop.Experiment.first(where={'identifier': plate.experiment.iloc[0]})
-            try:
-                iloop.Plate.first(where={'name': int(plate.plate_name.iloc[0]), 'experiment': experiment_object})
-            except ItemNotFound:
-                contents = plate[['well', 'medium', 'strain']].T.to_dict()
-                iloop.Plate.create(experiment=experiment_object, contents=contents, type=plate.plate_model[0])
+        for exp_id, experiment in self.df.groupby(['experiment']):
+            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            plates_df = self.df[['experiment', 'barcode', 'well', 'medium', 'strain', 'plate_model']].drop_duplicates()
+            for barcode, plate in plates_df.groupby(['barcode']):
+                plate_info = plate[['well', 'medium', 'strain']].set_index('well')
+                contents = {}
+                for well in plate_info.itertuples():
+                    contents[well.Index] = {
+                        'strain': iloop.Strain.first(where={'alias': well.strain, 'project': self.project}),
+                        'medium': iloop.Medium.first(where={'name': well.medium})
+                    }
+                try:
+                    plate = iloop.Plate.first(where={'barcode': barcode})
+                    plate.update_contents(contents)
+                except ItemNotFound:
+                    iloop.Plate.create(barcode=barcode, experiment=experiment_object, contents=contents,
+                                       type=plate.plate_model[0], project=self.project)
 
     def upload_screen(self, iloop):
-        for plate_num, plate in self.df.groupby(['plate', 'experiment']):
-            experiment_object = iloop.Experiment.first(where={'identifier': plate.experiment.iloc[0]})
-            plate_object = iloop.Plate.first(where={'name': int(plate.plate_name.iloc[0]),
-                                                    'experiment': experiment_object})
+        for exp_id, experiment in self.df.groupby(['experiment']):
+            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            sample_dict = {}
             scalars = []
-            for test_id, assay in plate.groupby('test_id'):
+
+            for barcode, plate in experiment.groupby(['barcode']):
+                sample_info = plate[['sample_id', 'well']].drop_duplicates()
+                plate_object = iloop.Plate.first(where={'barcode': barcode})
+                for sample in sample_info.itertuples():
+                    sample_dict[sample.sample_id] = {
+                        'plate': plate_object,
+                        'position': sample.well,
+                    }
+
+            for test_id, assay in experiment.groupby('test_id'):
                 row = assay.iloc[0].copy()
                 test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
+
                 a_scalar = {
-                    'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
+                    'measurements': {sample.sample_id: [float(sample.value)] for sample in assay.itertuples()},
                     'test': deepcopy(test),
                 }
                 scalars.append(a_scalar)
-            sample_info = plate[['medium', 'well']].drop_duplicates()
-            sample_dict = {}
-            for sample in sample_info.itertuples():
-                sample_dict[sample.well] = {
-                    'plate': plate_object,
-                    'position': sample.well,
-                }
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
@@ -420,9 +435,3 @@ def _cast_non_str_to_float(dictionary):
         if not isinstance(dictionary[key], str):
             dictionary[key] = float(dictionary[key])
     return dictionary
-
-
-def _isnan(value):
-    if isinstance(value, str):
-        return False
-    return np.isnan(value)

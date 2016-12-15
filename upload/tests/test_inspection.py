@@ -49,24 +49,29 @@ def test_strains_inspection(examples):
     assert 'bad expected gnomic' in error['message']
 
 
-def test_experiment_inspection(examples):
-    up = cup.ExperimentUploader('TST', join(examples, 'samples.csv'), join(examples, 'physiology.csv'), [])
+def test_fermentation_inspection(examples):
+    up = cup.FermentationUploader('TST', join(examples, 'samples.csv'), join(examples, 'physiology.csv'), [])
     assert isinstance(up.samples_df, pd.DataFrame)
     assert isinstance(up.physiology_df, pd.DataFrame)
 
 
-def test_experiment_inspection_with_iloop(examples):
+def test_screen_inspection(examples):
+    from collections import namedtuple
+    project = namedtuple('Project', ['code'])(code='TST')
+    up = cup.ScreenUploader(project, join(examples, 'screening.csv'), [])
+    assert isinstance(up.df, pd.DataFrame)
+
+
+def test_fermentation_inspection_with_iloop(examples):
     iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
-    up = cup.ExperimentUploader('TST',
-                                join(examples, 'samples.csv'),
-                                join(examples, 'physiology.csv'),
-                                custom_checks=[
-                                    partial(compound_name_unknown, iloop),
-                                    partial(experiment_identifier_unknown,
-                                            iloop),
-                                    partial(medium_name_unknown, iloop),
-                                    partial(strain_alias_unknown, iloop)],
-                                synonym_mapper=partial(synonym_to_chebi_name,
-                                                       iloop))
+    project = iloop.Project.first(where={'code': 'TST'})
+    up = cup.FermentationUploader('TST',
+                                  join(examples, 'samples.csv'),
+                                  join(examples, 'physiology.csv'),
+                                  custom_checks=[
+                                      partial(compound_name_unknown, iloop, None),
+                                      partial(medium_name_unknown, iloop, None),
+                                      partial(strain_alias_unknown, iloop, project)],
+                                  synonym_mapper=partial(synonym_to_chebi_name, iloop))
     assert isinstance(up.samples_df, pd.DataFrame)
     assert isinstance(up.physiology_df, pd.DataFrame)
