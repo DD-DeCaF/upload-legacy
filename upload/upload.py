@@ -47,7 +47,7 @@ class DataFrameInspector(object):
 
     def inspect(self):
         """ inspect the data frame and return an error report """
-        inspector = Inspector(custom_checks=self.custom_checks)
+        inspector = Inspector(custom_checks=self.custom_checks, order_fields=True)
         report = inspector.inspect(self.file_name, preset='table', schema=self.schema)
         if not report['valid']:
             raise ValueError(json.dumps(report, indent=4))
