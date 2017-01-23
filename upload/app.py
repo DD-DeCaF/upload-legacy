@@ -2,6 +2,8 @@ import asyncio
 from aiohttp import web
 import aiohttp_cors
 import pandas as pd
+import csv
+import re
 from pandas.io.common import CParserError
 import io
 import requests
@@ -26,12 +28,19 @@ def call_iloop_with_token(f):
             token = request.headers['Authorization'].replace('Bearer ', '')
         iloop = iloop_client(api, token)
         return await f(request, iloop)
+
     return wrapper
 
 
-def write_temp_csv(data_string):
+def write_temp_csv(content):
     file_description, tmp_file_name = mkstemp(suffix='.csv')
-    df = pd.read_csv(io.StringIO(data_string))
+    if content.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or re.match(
+            '^.*.xlsx{0,1}$', content.filename, flags=re.IGNORECASE):
+        df = pd.read_excel(content.file)
+    else:
+        data_string = content.file.read().decode()
+        s = csv.Sniffer()
+        df = pd.read_csv(io.StringIO(data_string), delimiter=s.sniff(data_string).delimiter)
     with open(tmp_file_name, 'w') as tmp_file:
         df.to_csv(tmp_file, index=False)
     return tmp_file_name
@@ -56,12 +65,12 @@ async def upload(request, iloop):
 
     try:
         if data['what'] == 'media':
-            content = data['file[0]'].file.read().decode()
+            content = data['file[0]']
             uploader = MediaUploader(project, write_temp_csv(content),
                                      custom_checks=[check_safe_partial(compound_name_unknown, iloop, None)],
                                      synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
         if data['what'] == 'strains':
-            content = data['file[0]'].file.read().decode()
+            content = data['file[0]']
             uploader = StrainsUploader(project, write_temp_csv(content))
         if data['what'] == 'screen':
             content = data['file[0]'].file.read().decode()
@@ -71,8 +80,8 @@ async def upload(request, iloop):
                                                      check_safe_partial(strain_alias_unknown, iloop, project)],
                                       synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
         if data['what'] == 'fermentation':
-            content_samples = data['file[0]'].file.read().decode()
-            content_physiology = data['file[1]'].file.read().decode()
+            content_samples = data['file[0]']
+            content_physiology = data['file[1]']
             uploader = FermentationUploader(project, write_temp_csv(content_samples),
                                             write_temp_csv(content_physiology),
                                             custom_checks=[check_safe_partial(compound_name_unknown, iloop, None),
@@ -105,6 +114,7 @@ async def schema(request):
         schema_object = json.load(schema_file)
     return web.json_response(data=schema_object)
 
+
 ROUTE_CONFIG = [
     ('POST', '/upload', upload),
     ('GET', '/upload/hello', hello),
@@ -129,7 +139,7 @@ for method, path, handler in ROUTE_CONFIG:
 
 
 async def start(loop):
-    await loop.create_server(app.make_handler(), '0.0.0.0', 8000)
+    await loop.create_server(app.make_handler(), '0.0.0.0', 8001)
     logger.info('Web server is up')
 
 
