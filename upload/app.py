@@ -32,6 +32,21 @@ def call_iloop_with_token(f):
     return wrapper
 
 
+def guess_delimiter(string):
+    """ guess a delimiter in a csv file
+
+    csv sniffer only works for syntactically correct csv files, this is more relaxed
+    """
+    options = ',;\t|'
+    try:
+        s = csv.Sniffer()
+        return s.sniff(string).delimiter
+    except csv.Error:
+        substring = string[0:min(len(string), 2000)]
+        counts = [substring.count(d) for d in options]
+        return options[counts.index(max(counts))]
+
+
 def write_temp_csv(content):
     file_description, tmp_file_name = mkstemp(suffix='.csv')
     if content.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or re.match(
@@ -39,8 +54,8 @@ def write_temp_csv(content):
         df = pd.read_excel(content.file)
     else:
         data_string = content.file.read().decode()
-        s = csv.Sniffer()
-        df = pd.read_csv(io.StringIO(data_string), delimiter=s.sniff(data_string).delimiter)
+        delimiter = guess_delimiter(data_string)
+        df = pd.read_csv(io.StringIO(data_string), delimiter=delimiter)
     with open(tmp_file_name, 'w') as tmp_file:
         df.to_csv(tmp_file, index=False)
     return tmp_file_name
