@@ -88,7 +88,7 @@ async def upload(request, iloop):
             content = data['file[0]']
             uploader = StrainsUploader(project, write_temp_csv(content))
         if data['what'] == 'screen':
-            content = data['file[0]'].file.read().decode()
+            content = data['file[0]']
             uploader = ScreenUploader(project, write_temp_csv(content),
                                       custom_checks=[check_safe_partial(compound_name_unknown, iloop, None),
                                                      check_safe_partial(medium_name_unknown, iloop, None),
