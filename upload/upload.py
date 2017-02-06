@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 from potion_client.exceptions import ItemNotFound
 from goodtables import Inspector
+from dateutil.parser import parse as parse_date
 import json
 from os.path import abspath, dirname, join, exists
 from requests import HTTPError
@@ -264,7 +265,7 @@ class ExperimentUploader(AbstractDataUploader):
                 iloop.Experiment.create(project=self.project,
                                         type=self.type,
                                         identifier=exp_id,
-                                        date=datetime.strptime(exp_info.date, '%Y-%m-%d'),
+                                        date=parse_date(exp_info.date),
                                         description=exp_info.description,
                                         attributes={'conditions': conditions,
                                                     'operation': sample_info.to_dict()['operation'],

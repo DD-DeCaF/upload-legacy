@@ -15,8 +15,9 @@
         },
         {
             "name": "date",
-            "title": "starting date for the experiment",
-            "type": "date"
+            "title": "starting date for the experiment in YYYY-MM-DD format e.g. 2017-12-24 or 2017/12/24",
+            "type": "date",
+            "format": "any"
         },
         {
             "name": "temperature",

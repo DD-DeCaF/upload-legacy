@@ -1,5 +1,5 @@
 experiment,description,date,temperature,plate_model,plate_name,operation,row,column,medium,strain,parameter,numerator_compound_name,denominator_compound_name,unit,value
-screen1,test-screen,2016-11-10,30,96-well,plate1,c-sufficient,A,1,screen-media,spam,biomass,,,g/L,0.5
+screen1,test-screen,2016/11/10,30,96-well,plate1,c-sufficient,A,1,screen-media,spam,biomass,,,g/L,0.5
 screen1,test-screen,2016-11-10,30,96-well,plate1,c-sufficient,A,2,screen-media,spam,biomass,,,g/L,0.3
 screen1,test-screen,2016-11-10,30,96-well,plate1,c-deficient,A,3,screen-media,spam,biomass,,,g/L,0.1
 screen1,test-screen,2016-11-10,30,96-well,plate1,c-deficient,A,4,screen-media,spam,biomass,,,g/L,0.01
