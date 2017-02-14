@@ -174,6 +174,7 @@ class StrainsUploader(AbstractDataUploader):
             genotype_strain = '' if str(strain.genotype_strain) == 'nan' else strain.genotype_strain
             self.iloop_args.append({
                 'pool_alias': strain.pool,
+                'pool_type': strain.pool_type,
                 'parent_pool_alias': strain.parent_pool,
                 'genotype_pool': genotype_pool,
                 'strain_alias': strain.strain,
