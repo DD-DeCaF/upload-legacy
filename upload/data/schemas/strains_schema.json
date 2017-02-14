@@ -9,6 +9,14 @@
       }
     },
     {
+      "name": "pool_type",
+      "title": "one of the strings: ale_population, ale_strain, library, design",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
       "name": "genotype_pool",
       "title": "the gnomic definition genotype relative to the parent",
       "type": "string"

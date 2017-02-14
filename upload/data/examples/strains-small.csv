@@ -1,2 +1,2 @@
-pool,genotype_pool,parent_pool,strain,genotype_strain,parent_strain,reference,organism
-test1,,,spam,,,True,SCE
+pool,pool_type,genotype_pool,parent_pool,strain,genotype_strain,parent_strain,reference,organism
+test1,ale_population,,,spam,,,True,SCE

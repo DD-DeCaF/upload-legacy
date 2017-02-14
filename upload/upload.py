@@ -201,7 +201,8 @@ class StrainsUploader(AbstractDataUploader):
                     iloop.Pool.create(alias=item['pool_alias'],
                                       project=self.project,
                                       parent_pool=parent_pool_object,
-                                      genotype=item['genotype_pool'])
+                                      genotype=item['genotype_pool'],
+                                      type=item['pool_type'])
                     pool_object = iloop.Pool.first(where={'alias': item['pool_alias']})
                 parent_object = None
                 if not _isnan(item['parent_strain_alias']):
