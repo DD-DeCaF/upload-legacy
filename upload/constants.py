@@ -74,7 +74,7 @@ synonym_to_chebi_name_dict = {
 skip_list = {'Antifoam 204'}
 
 
-def measurement_test(unit, parameter, numerator, denominator):
+def measurement_test(unit, parameter, numerator_compound, denominator_compound, quantity):
     unit_dict = {'mg/L': {'numerator': {'quantity': 'mass', 'unit': 'mg'},
                           'denominator': {'quantity': 'volume', 'unit': 'L'}},
                  'Cmol/Cmol': {'numerator': {'quantity': 'amount', 'unit': 'Cmol'},
@@ -97,10 +97,12 @@ def measurement_test(unit, parameter, numerator, denominator):
                                  'denominator': {'quantity': 'CDW', 'unit': 'g'}, 'rate': 'h'}}
     test_description = unit_dict[str(unit)]
     test_description['type'] = parameter
-    if numerator != 'nan':
-        test_description['numerator']['compounds'] = [numerator]
-    if denominator != 'nan':
-        test_description['denominator']['compounds'] = [denominator]
+    if str(numerator_compound) != 'nan':
+        test_description['numerator']['compounds'] = [numerator_compound]
+    if str(denominator_compound) != 'nan':
+        test_description['denominator']['compounds'] = [denominator_compound]
+    if str(quantity) != 'nan':
+        test_description['numerator']['quantity'] = quantity
     return test_description
 
 compound_skip = 'compound-on-skip-list'

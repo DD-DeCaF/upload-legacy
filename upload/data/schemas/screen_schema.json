@@ -118,6 +118,27 @@
             }
         },
         {
+            "name": "quantity",
+            "title": "the quantity that was measured, e.g. mass or temperature",
+            "type": "string",
+            "constraints": {
+                "enum": [
+                    "",
+                    "mass",
+                    "amount",
+                    "temperature",
+                    "volume",
+                    "carbon-balance",
+                    "CDW",
+                    "OD",
+                    "DO",
+                    "growth",
+                    "pH",
+                    "rotation-speed"
+                ]
+            }
+        },
+        {
             "name": "numerator_compound_name",
             "title": "the quantity in the numerator, e.g. biomass, glucose etc",
             "type": "string"

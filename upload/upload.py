@@ -312,14 +312,11 @@ class FermentationUploader(ExperimentUploader):
         self.physiology_df = physiology_validator()
         sample_cols = ['sample_id', 'experiment', 'reactor', 'operation',
                        'feed_medium', 'batch_medium', 'strain']
-        self.df = (
-            pd.melt(self.physiology_df,
-                    id_vars=['phase_start', 'phase_end', 'parameter',
-                             'denominator_compound_name',
-                             'numerator_compound_name', 'unit'],
-                    var_name='sample_id')
-                .merge(self.samples_df[sample_cols], on='sample_id')
-        )
+        self.df = (pd.melt(self.physiology_df,
+                           id_vars=['phase_start', 'phase_end', 'quantity', 'parameter',
+                                    'denominator_compound_name', 'numerator_compound_name', 'unit'],
+                           var_name='sample_id')
+                   .merge(self.samples_df[sample_cols], on='sample_id'))
         self.extra_transformations()
 
     def upload(self, iloop):
@@ -353,7 +350,8 @@ class FermentationUploader(ExperimentUploader):
 
                 for test_id, assay in phase.groupby('test_id'):
                     row = assay.iloc[0].copy()
-                    test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
+                    test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi,
+                                            row.quantity)
                     a_scalar = {
                         'measurements': {reactor.reactor: [float(reactor.value)] for reactor in assay.itertuples()},
                         'test': deepcopy(test),
@@ -423,7 +421,8 @@ class ScreenUploader(ExperimentUploader):
 
             for test_id, assay in experiment.groupby('test_id'):
                 row = assay.iloc[0].copy()
-                test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi)
+                test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi,
+                                        row.quantity)
 
                 a_scalar = {
                     'measurements': {sample.sample_id: [float(sample.value)] for sample in assay.itertuples()},
