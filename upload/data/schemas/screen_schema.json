@@ -21,7 +21,7 @@
         },
         {
             "name": "temperature",
-            "title": "temperature in celcius",
+            "title": "temperature in Celsius",
             "type": "number",
             "constraints": {
                 "maximum": 50,

@@ -10,7 +10,7 @@
         },
         {
             "name": "compound_name",
-            "title": "the iloop coumpund 'chebi_name' of the medium, or something that can be resolved to one.",
+            "title": "the iloop compound 'chebi_name' of the medium, or something that can be resolved to one.",
             "type": "string",
             "constraints": {
                 "required": true
