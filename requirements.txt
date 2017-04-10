@@ -1,4 +1,4 @@
-aiohttp
+aiohttp==1.3.5
 aiozmq
 aiohttp_cors
 potion_client
