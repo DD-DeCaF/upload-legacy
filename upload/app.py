@@ -40,11 +40,13 @@ def guess_delimiter(string):
     options = ',;\t|'
     try:
         s = csv.Sniffer()
-        return s.sniff(string).delimiter
+        delimiter = s.sniff(string, delimiters=options).delimiter
     except csv.Error:
         substring = string[0:min(len(string), 2000)]
         counts = [substring.count(d) for d in options]
-        return options[counts.index(max(counts))]
+        delimiter = options[counts.index(max(counts))]
+    logger.info('using %s as delimiter' % delimiter)
+    return delimiter
 
 
 def write_temp_csv(content):
