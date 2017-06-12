@@ -52,7 +52,9 @@
             "name": "plate_name",
             "title": "name of the plate, to identify the plate within this experiment",
             "type": "string",
-			"required": true
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "operation",
@@ -66,21 +68,27 @@
             "name": "row",
             "title": "row identifier in plate",
             "type": "string",
-			"pattern": "^[A-Z]$",
-			"required": true
+            "constraints": {
+			    "pattern": "^[A-Z]$",
+			    "required": true
+            }
         },
         {
             "name": "column",
             "title": "column identifier in plate",
             "type": "string",
 			"pattern": "^[0-9]+$",
-			"required": true
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "medium",
             "title": "the existing iloop name for the used medium",
             "type": "string",
-			"required": true
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "strain",
