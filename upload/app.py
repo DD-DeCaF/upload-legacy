@@ -9,13 +9,16 @@ import io
 import requests
 import json
 from functools import wraps, partial
-from upload.upload import MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader, get_schema
+from upload.upload import (MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader, FluxUploader,
+                           get_schema)
 from tempfile import mkstemp
 from potion_client.exceptions import ItemNotFound
 from upload import iloop_client, __version__, logger
 from upload.settings import Default
-from upload.checks import compound_name_unknown, medium_name_unknown, strain_alias_unknown, \
-    synonym_to_chebi_name, check_safe_partial
+from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
+                           reaction_id_unknown, synonym_to_chebi_name, check_safe_partial)
+
+UPLOAD_TYPES = {'strains', 'media', 'fermentation', 'screen', 'fluxes'}
 
 
 def call_iloop_with_token(f):
@@ -76,8 +79,8 @@ async def upload(request, iloop):
         project = iloop.Project.first(where={'code': data['project_id']})
     except requests.exceptions.HTTPError:
         raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier"}')
-    if data['what'] not in ['strains', 'media', 'fermentation', 'screen']:
-        raise web.HTTPBadRequest(text='{"status": "expected strains, media or samples/physiology component of post"}')
+    if data['what'] not in UPLOAD_TYPES:
+        raise web.HTTPBadRequest(text='{"status": "expected {} component of post"}'.format(', '.join(UPLOAD_TYPES)))
     uploader = None
 
     try:
@@ -105,6 +108,12 @@ async def upload(request, iloop):
                                                            check_safe_partial(medium_name_unknown, iloop, None),
                                                            check_safe_partial(strain_alias_unknown, iloop, project)],
                                             synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
+        if data['what'] == 'fluxes':
+            content = data['file[0]']
+            uploader = FluxUploader(project, write_temp_csv(content),
+                                    custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
+                                                   check_safe_partial(reaction_id_unknown, iloop, None),
+                                                   check_safe_partial(strain_alias_unknown, iloop, project)])
     except CParserError:
         return web.json_response(
             data={'valid': False, 'tables': [{'errors': [{'message': 'failed to parse csv file '}]}]})
@@ -112,7 +121,7 @@ async def upload(request, iloop):
         return web.json_response(data=json.loads(str(error)))
     try:
         uploader.upload(iloop=iloop)
-    except (ItemNotFound, requests.exceptions.HTTPError)as error:
+    except (ItemNotFound, requests.exceptions.HTTPError) as error:
         return web.json_response(
             data={'valid': False, 'tables': [{'errors': [{'message': str(error)}]}]})
     else:
