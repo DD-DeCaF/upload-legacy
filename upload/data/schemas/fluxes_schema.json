@@ -1,0 +1,94 @@
+{
+    "fields": [
+        {
+            "name": "experiment",
+            "title": "the iloop experiment identifier (new experiment created if not existing)",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "phase_start",
+            "title": "hours after 0 that the phase started",
+            "type": "number",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "phase_end",
+            "title": "hours after 0 that the phase ended",
+            "type": "number",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "sample_name",
+            "title": "the desired sample name (must be unique within this experiment and project)",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "description",
+            "title": "experiment description",
+            "type": "string"
+        },
+        {
+            "name": "date",
+            "title": "starting date for the experiment in YYYY-MM-DD format e.g. 2017-12-24 or 2017/12/24",
+            "type": "date",
+            "format": "any"
+        },
+        {
+            "name": "temperature",
+            "title": "temperature in Celsius",
+            "type": "number",
+            "constraints": {
+                "maximum": 50,
+                "minimum": 0
+            }
+        },
+        {
+            "name": "operation",
+            "title": "arbitrary label with the main factor of interest",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "medium",
+            "title": "the existing iloop name for the used medium",
+            "type": "string",
+			"required": true
+        },
+        {
+            "name": "strain",
+            "title": "the iloop existing strain alias for the strain in this reactor",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "reaction_id",
+            "title": "the bigg identifier for the reaction",
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
+        },
+		{
+			"name": "value",
+			"title": "the measured flux",
+			"type": "number",
+            "constraints": {
+                "required": true
+            }
+		}
+    ]
+}

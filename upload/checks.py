@@ -51,6 +51,10 @@ def valid_medium_name(iloop, project, name):
     iloop.Medium.first(where={'name': name})
 
 
+def valid_reaction_identifier(iloop, project, identifier):
+    iloop.Reaction.first(where={'identifier': identifier})
+
+
 @check('genotype-not-gnomic', type='structure', context='body', after='duplicate-row')
 def genotype_not_gnomic(errors, columns, row_number, state):
     """ checker logging if any columns named genotype have rows with non-gnomic strings """
@@ -151,6 +155,21 @@ def medium_name_unknown(iloop, project, errors, columns, row_number, state):
         None,
         'medium',
         valid_medium_name,
+        message,
+        errors, columns, row_number
+    )
+
+
+@check('reaction-id-unknown', type='structure', context='body', after='duplicate-row')
+def reaction_id_unknown(iloop, project, errors, columns, row_number, state):
+    message = ('Row {row_number} has unknown reaction identifier "{value}" '
+               'in column {column_number} '
+               'definition perhaps not known to iloop')
+    identifier_unknown(
+        iloop,
+        None,
+        'reaction_id',
+        valid_reaction_identifier,
         message,
         errors, columns, row_number
     )

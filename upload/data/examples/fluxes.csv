@@ -1,0 +1,17 @@
+experiment,phase_start,phase_end,sample_name,description,date,temperature,operation,medium,strain,reaction_id,value
+flux1,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCt3pp,0.1
+flux1,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtm,0.2
+flux1,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.3
+flux1,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.4
+flux1,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.1
+flux1,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtm,0.2
+flux1,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.3
+flux1,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.4
+flux2,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCt3pp,0.1
+flux2,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtm,0.2
+flux2,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.3
+flux2,0,29,flux1A1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.4
+flux2,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCt3pp,0.1
+flux2,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtm,0.2
+flux2,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.3
+flux2,0,29,flux1B1,flux upload test,2017-06-10,37,nothing,my-batch,spam,SUCCtp,0.4

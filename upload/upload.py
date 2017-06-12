@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from upload.constants import measurement_test, compound_skip
 from upload.checks import genotype_not_gnomic
-from upload import _isnan
+from upload import _isnan, logger
 
 
 def place_holder_compound_synonym_mapper(synonym):
@@ -22,7 +22,8 @@ def get_schema(schema_name):
                        'media': 'media_schema.json',
                        'sample_information': 'sample_information_schema.json',
                        'physiology': 'physiology_schema.json',
-                       'screen': 'screen_schema.json'}
+                       'screen': 'screen_schema.json',
+                       'fluxes': 'fluxes_schema.json'}
     schema_name = default_schemas[schema_name]
     schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
     schema = join(schema_dir, schema_name)
@@ -224,13 +225,13 @@ class ExperimentUploader(AbstractDataUploader):
     """uploader for experiment data
     """
 
-    def __init__(self, project, overwrite=True,
+    def __init__(self, project, type, sample_name, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
         super(ExperimentUploader, self).__init__(project)
         self.overwrite = overwrite
         self.synonym_mapper = synonym_mapper
-        self.type = '..'
-        self.sample_name = '..'
+        self.type = type
+        self.sample_name = sample_name
         self.experiment_keys = []
         self.assay_cols = ['unit', 'parameter', 'numerator_chebi', 'denominator_chebi']
         self.samples_df = None
@@ -289,10 +290,9 @@ class FermentationUploader(ExperimentUploader):
 
     def __init__(self, project, samples_file_name, physiology_file_name, custom_checks, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
-        super(FermentationUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        super(FermentationUploader, self).__init__(project, type='fermentation', sample_name='reactor',
+                                                   overwrite=overwrite, synonym_mapper=synonym_mapper)
         self.assay_cols.extend(['phase_start', 'phase_end'])
-        self.type = 'fermentation'
-        self.sample_name = 'reactor'
         self.experiment_keys = ['experiment', 'description', 'date', 'do', 'gas', 'gasflow', 'ph_set', 'ph_correction',
                                 'stirrer', 'temperature']
         self.samples_df = inspected_data_frame(samples_file_name, 'sample_information', custom_checks=custom_checks)
@@ -337,17 +337,8 @@ class FermentationUploader(ExperimentUploader):
                     'feed_medium': iloop.Medium.first(where={'name': sample.feed_medium})
                 }
             for phase_num, phase in experiment.groupby(['phase_start', 'phase_end']):
-                try:
-                    phase_object = iloop.ExperimentPhase.first(where={'start': int(phase.phase_start.iloc[0]),
-                                                                      'end': int(phase.phase_end.iloc[0]),
-                                                                      'experiment': experiment_object})
-                except ItemNotFound:
-                    phase_object = iloop.ExperimentPhase.create(experiment=experiment_object,
-                                                                start=int(phase.phase_start.iloc[0]),
-                                                                end=int(phase.phase_end.iloc[0]),
-                                                                title='{}__{}'.format(phase.phase_start.iloc[0],
-                                                                                      phase.phase_end.iloc[0]))
-
+                phase_object = get_create_phase(iloop, float(phase.phase_start.iloc[0]),
+                                                float(phase.phase_end.iloc[0]), experiment_object)
                 for test_id, assay in phase.groupby('test_id'):
                     row = assay.iloc[0].copy()
                     test = measurement_test(row.unit, row.parameter, row.numerator_chebi, row.denominator_chebi,
@@ -367,10 +358,9 @@ class ScreenUploader(ExperimentUploader):
 
     def __init__(self, project, file_name, custom_checks, overwrite=True,
                  synonym_mapper=place_holder_compound_synonym_mapper):
-        super(ScreenUploader, self).__init__(project, overwrite=overwrite, synonym_mapper=synonym_mapper)
+        super(ScreenUploader, self).__init__(project, type='screening', sample_name='well',
+                                             overwrite=overwrite, synonym_mapper=synonym_mapper)
         self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
-        self.type = 'screening'
-        self.sample_name = 'well'
         self.df = inspected_data_frame(file_name, 'screen', custom_checks=custom_checks)
         self.df['project'] = self.project.code
         self.df['barcode'] = self.df[['project', 'experiment', 'plate_name']].apply(lambda x: '_'.join(x), axis=1)
@@ -432,8 +422,65 @@ class ScreenUploader(ExperimentUploader):
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
+class FluxUploader(ExperimentUploader):
+    """uploader for fluxomics data
+    """
+
+    def __init__(self, project, file_name, custom_checks, overwrite=True):
+        super(FluxUploader, self).__init__(project, type='screening', sample_name='sample_name',
+                                           overwrite=overwrite)
+        self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
+        self.df = inspected_data_frame(file_name, 'fluxes', custom_checks=custom_checks)
+        self.df['project'] = self.project.code
+        self.samples_df = self.df
+        self.df.dropna(0, subset=['value'], inplace=True)
+
+    def upload(self, iloop):
+        self.upload_experiment_info(iloop)
+        self.upload_sample_info(iloop)
+        self.upload_fluxes(iloop)
+
+    def upload_sample_info(self, iloop):
+        sample_info = self.df[['experiment', 'medium', 'sample_name', 'strain']].drop_duplicates()
+        for sample in sample_info.itertuples():
+            try:
+                return iloop.Sample.first(where={'name': sample.sample_name})
+            except ItemNotFound:
+                experiment = iloop.Experiment.first(where={'identifier': sample.experiment})
+                medium = iloop.Medium.first(where={'name': sample.medium})
+                strain = iloop.Strain.first(where={'alias': sample.strain})
+                iloop.Sample.create(experiment=experiment,
+                                    name=sample.sample_name,
+                                    medium=medium,
+                                    strain=strain)
+
+    def upload_fluxes(self, iloop):
+        for grouping, fluxes_for_sample in self.df.groupby(['sample_name', 'phase_start', 'phase_end']):
+            sample_name, phase_start, phase_end = grouping
+            sample = iloop.Sample.first(where={'name': sample_name})
+            phase_object = get_create_phase(iloop, float(phase_start), float(phase_end), sample.experiment)
+            fluxes_for_sample.index = fluxes_for_sample.reaction_id
+            flux_dict = fluxes_for_sample.value.to_dict()
+            logger.info(str(flux_dict))
+            iloop.ReactionFlux.add_fluxes(sample=sample, fluxes=flux_dict, phase=phase_object,
+                                          experiment=sample.experiment)
+
+
 def _cast_non_str_to_float(dictionary):
     for key in dictionary:
         if not isinstance(dictionary[key], str):
             dictionary[key] = float(dictionary[key])
     return dictionary
+
+
+def get_create_phase(iloop, start, end, experiment):
+    try:
+        phase_object = iloop.ExperimentPhase.first(where={'start': start,
+                                                          'end': end,
+                                                          'experiment': experiment})
+    except ItemNotFound:
+        phase_object = iloop.ExperimentPhase.create(experiment=experiment,
+                                                    start=start,
+                                                    end=end,
+                                                    title='{}__{}'.format(start, end))
+    return phase_object
