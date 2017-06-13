@@ -1,5 +1,15 @@
 sudo: required
 language: python
+
+branches:
+  only:
+  - master
+  - devel
+  - /^v[0-9]+\.[0-9]+\.[0-9]+[.0-9ab]*$/
+
+git:
+  depth: 3
+
 services:
   - docker
 
