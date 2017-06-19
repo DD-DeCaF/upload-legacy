@@ -4,7 +4,7 @@
 # COMMANDS                                                                      #
 #################################################################################
 
-## Install and start the iloop backend.
+## Install and start the upload service.
 start:
 	docker network inspect iloop-net || docker network create iloop-net
 	docker-compose up -d --build
