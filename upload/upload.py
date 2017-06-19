@@ -23,7 +23,8 @@ def get_schema(schema_name):
                        'sample_information': 'sample_information_schema.json',
                        'physiology': 'physiology_schema.json',
                        'screen': 'screen_schema.json',
-                       'fluxes': 'fluxes_schema.json'}
+                       'fluxes': 'fluxes_schema.json',
+                       'protein_abundances': 'protein_abundances_schema.json'}
     schema_name = default_schemas[schema_name]
     schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
     schema = join(schema_dir, schema_name)
@@ -422,23 +423,24 @@ class ScreenUploader(ExperimentUploader):
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
-class FluxUploader(ExperimentUploader):
-    """uploader for fluxomics data
+class OmicsUploader(ExperimentUploader):
+    """uploader for 'omics' data
     """
 
-    def __init__(self, project, file_name, custom_checks, overwrite=True):
-        super(FluxUploader, self).__init__(project, type='screening', sample_name='sample_name',
-                                           overwrite=overwrite)
+    def __init__(self, project, file_name, custom_checks, omics_type, overwrite=True):
+        super(OmicsUploader, self).__init__(project, type='fermentation', sample_name='sample_name',
+                                            overwrite=overwrite)
         self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
         self.df = inspected_data_frame(file_name, 'fluxes', custom_checks=custom_checks)
         self.df['project'] = self.project.code
         self.samples_df = self.df
+        self.omics_type = omics_type
         self.df.dropna(0, subset=['value'], inplace=True)
 
     def upload(self, iloop):
         self.upload_experiment_info(iloop)
         self.upload_sample_info(iloop)
-        self.upload_fluxes(iloop)
+        self.upload_measurements(iloop)
 
     def upload_sample_info(self, iloop):
         sample_info = self.df[['experiment', 'medium', 'sample_name', 'strain']].drop_duplicates()
@@ -454,16 +456,18 @@ class FluxUploader(ExperimentUploader):
                                     medium=medium,
                                     strain=strain)
 
-    def upload_fluxes(self, iloop):
-        for grouping, fluxes_for_sample in self.df.groupby(['sample_name', 'phase_start', 'phase_end']):
+    def upload_measurements(self, iloop):
+        omics_test = {'type': 'abundance'}
+        for grouping, measurements_for_sample in self.df.groupby(['sample_name', 'phase_start', 'phase_end']):
             sample_name, phase_start, phase_end = grouping
-            sample = iloop.Sample.first(where={'name': sample_name})
-            phase_object = get_create_phase(iloop, float(phase_start), float(phase_end), sample.experiment)
-            fluxes_for_sample.index = fluxes_for_sample.reaction_id
-            flux_dict = fluxes_for_sample.value.to_dict()
-            logger.info(str(flux_dict))
-            iloop.ReactionFlux.add_fluxes(sample=sample, fluxes=flux_dict, phase=phase_object,
-                                          experiment=sample.experiment)
+            sample_object = iloop.Sample.first(where={'name': sample_name})
+            phase_object = get_create_phase(iloop, float(phase_start), float(phase_end),
+                                            sample_object.experiment)
+            measurements_for_sample.index = measurements_for_sample.reaction_id
+            measurement_dict = measurements_for_sample.value.to_dict()
+            logger.info(str(measurement_dict))
+            sample_object.add_omics(phase=phase_object, type=self.omics_type, test=omics_test,
+                                    measurements=measurement_dict)
 
 
 def _cast_non_str_to_float(dictionary):

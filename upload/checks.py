@@ -1,8 +1,26 @@
 from functools import lru_cache, partial
 from goodtables import check
-from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
 from potion_client.exceptions import ItemNotFound
 import gnomic
+
+from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
+from upload import iloop_client, logger
+from upload.settings import Default
+
+
+IDENTIFIER_TYPES = {'protein', 'reaction'}
+
+
+def load_identifiers(type):
+    iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
+    return set(iloop.BiologicalIdentifier.subset(type=type))
+
+
+class OmicsIdentifiers:
+    IDENTIFIERS = {
+        type: load_identifiers(type) for type in IDENTIFIER_TYPES
+    }
+    logger.info('omics identifiers cached')
 
 
 def check_safe_partial(func, *args, **keywords):
@@ -52,7 +70,13 @@ def valid_medium_name(iloop, project, name):
 
 
 def valid_reaction_identifier(iloop, project, identifier):
-    iloop.Reaction.first(where={'identifier': identifier})
+    if identifier not in OmicsIdentifiers.IDENTIFIERS['reaction']:
+        raise ValueError('not a valid reaction identifier')
+
+
+def valid_protein_identifier(iloop, project, identifier):
+    if identifier not in OmicsIdentifiers.IDENTIFIERS['protein']:
+        raise ValueError('not a valid protein identifier')
 
 
 @check('genotype-not-gnomic', type='structure', context='body', after='duplicate-row')
@@ -170,6 +194,21 @@ def reaction_id_unknown(iloop, project, errors, columns, row_number, state):
         None,
         'reaction_id',
         valid_reaction_identifier,
+        message,
+        errors, columns, row_number
+    )
+
+
+@check('protein-id-unknown', type='structure', context='body', after='duplicate-row')
+def protein_id_unknown(iloop, project, errors, columns, row_number, state):
+    message = ('Row {row_number} has unknown protein identifier "{value}" '
+               'in column {column_number} '
+               'definition perhaps not known to iloop')
+    identifier_unknown(
+        iloop,
+        None,
+        'protein_id',
+        valid_protein_identifier,
         message,
         errors, columns, row_number
     )
