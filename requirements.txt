@@ -9,4 +9,4 @@ gunicorn
 pytest-cov
 pandas
 numpy
-git+https://github.com/frictionlessdata/goodtables-py.git#egg=goodtables
+https://github.com/frictionlessdata/goodtables-py/archive/goodtables.zip
