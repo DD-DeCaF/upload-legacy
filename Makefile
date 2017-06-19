@@ -1,10 +1,4 @@
-.PHONY: start logs setup user stop clean wipe
-
-#################################################################################
-# GLOBALS                                                                       #
-#################################################################################
-
-PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+.PHONY: start logs stop clean
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -12,33 +6,12 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 ## Install and start the iloop backend.
 start:
-	docker volume create --name=iloop-upload
+	docker network inspect iloop-net || docker network create iloop-net
 	docker-compose up -d --build
 
 ## Read the logs.
 logs:
 	docker-compose logs --tail="all" -f
-
-## Load data from fixtures into database. Only run this once!
-setup: start
-	@echo "**********************************************************************"
-	@echo "* Running database migrations."
-	@echo "**********************************************************************"
-	docker-compose run --rm web python manage.py db upgrade
-	@echo "**********************************************************************"
-	@echo "* Loading fixtures content."
-	@echo "**********************************************************************"
-	docker-compose run --rm web python manage.py fixtures init
-	@echo "**********************************************************************"
-	@echo "* Congratulations! You can now access the iloop API."
-	@echo "**********************************************************************"
-
-## Create a unique superuser with personal access token.
-user: start
-	@echo "**********************************************************************"
-	@echo "* Creating superuser."
-	@echo "**********************************************************************"
-	docker-compose run --rm web python manage.py user add_developer
 
 ## Shut down the Docker containers.
 stop:
@@ -47,12 +20,6 @@ stop:
 ## Remove all containers.
 clean:
 	docker-compose down
-	@echo "If you really want to remove all data run 'make wipe' instead."
-
-## Remove all containers and data volumes.
-wipe:
-	docker-compose down
-	docker volume rm iloop-upload
 
 #################################################################################
 # PROJECT RULES                                                                 #
