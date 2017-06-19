@@ -1,0 +1,9 @@
+experiment,phase_start,phase_end,sample_name,description,date,temperature,operation,medium,strain,reaction_id,value
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecref,ASPA_ECOLI,15
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecref,ASTA_ECOLI,0.22
+protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecref,ASPA_ECOLI,14
+protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecref,ASTA_ECOLI,0.2
+protein1,0,29,protein1C1,protein gruop a,2017-06-10,37,nothing,my-batch,ecref,ASPA_ECOLI,15.1
+protein1,0,29,protein1C1,protein gruop a,2017-06-10,37,nothing,my-batch,ecref,ASTA_ECOLI,0.21
+protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecref,ASPA_ECOLI,14.1
+protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecref,ASTA_ECOLI,0.2

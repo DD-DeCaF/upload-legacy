@@ -8,5 +8,4 @@ gnomic
 gunicorn
 pytest-cov
 pandas
-numpy
 goodtables>=1.0.0a16
