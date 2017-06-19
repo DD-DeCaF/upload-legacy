@@ -11,6 +11,9 @@ RUN pip install --upgrade --process-dependency-links -r /tmp/requirements.txt &&
 
 COPY . /opt/upload
 
+# Setting the working directory is necessary for the tests.
+WORKDIR /opt/upload
+
 ENV PYTHONPATH "${PYTHONPATH}:/opt/upload"
 
 ENTRYPOINT ["gunicorn"]
