@@ -21,6 +21,10 @@ stop:
 clean:
 	docker-compose down
 
+## Start the service and run unit tests.
+test: start
+	docker-compose exec web /bin/bash -c "pytest -vs --cov=./upload upload/tests/"
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
