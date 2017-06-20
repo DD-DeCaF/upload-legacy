@@ -30,8 +30,7 @@ setup(
     packages=[
         'upload',
     ],
-    package_dir={'upload':
-                     'upload'},
+    package_dir={'upload': 'upload'},
     include_package_data=True,
     install_requires=requirements,
     license="GNU General Public License v3",
