@@ -9,4 +9,4 @@ gunicorn
 pytest-cov
 pandas
 numpy
-https://github.com/frictionlessdata/goodtables-py/archive/master.zip
+goodtables>=1.0.0a16
