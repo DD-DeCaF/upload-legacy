@@ -5,7 +5,8 @@
       "title": "the iloop 'pool alias'",
       "type": "string",
       "constraints": {
-        "required": true
+        "required": true,
+        "pattern": "^[0-9A-Za-z_-]+$"
       }
     },
     {
@@ -13,7 +14,13 @@
       "title": "one of the strings: ale_population, ale_strain, library, design",
       "type": "string",
       "constraints": {
-        "required": true
+        "required": true,
+        "enum": [
+          "ale_population",
+          "ale_strain",
+          "library",
+          "design"
+        ]
       }
     },
     {
@@ -24,7 +31,10 @@
     {
       "name": "parent_pool",
       "title": "alias of the parent pool",
-      "type": "string"
+      "type": "string",
+      "constraints": {
+        "pattern": "^[0-9A-Za-z_-]*$"
+      }
     },
     {
       "name": "strain",
