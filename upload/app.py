@@ -18,7 +18,7 @@ from upload.settings import Default
 from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
                            reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial)
 
-UPLOAD_TYPES = {'strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'}
+UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
 
 def call_iloop_with_token(f):
@@ -76,7 +76,7 @@ async def list_projects(request, iloop):
 async def upload(request, iloop):
     data = await request.post()
     try:
-        project = iloop.Project.first(where={'code': data['project_id']})
+        project = iloop.Project.one(where={'code': data['project_id']})
     except requests.exceptions.HTTPError:
         raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier"}')
     if data['what'] not in UPLOAD_TYPES:
