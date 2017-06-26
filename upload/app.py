@@ -30,8 +30,9 @@ def call_iloop_with_token(f):
                 api = Default.ILOOP_BIOSUSTAIN
             token = request.headers['Authorization'].replace('Bearer ', '')
         iloop = iloop_client(api, token)
-        return await f(request, iloop)
-
+        response = await f(request, iloop)
+        assert response.status == 200, 'call to iloop failed with {}'.format(response.status)
+        return response
     return wrapper
 
 
