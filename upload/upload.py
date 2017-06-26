@@ -190,15 +190,16 @@ class StrainsUploader(AbstractDataUploader):
     def upload(self, iloop):
         for item in self.iloop_args:
             try:
-                iloop.Strain.first(where={'alias': item['strain_alias'], 'project': item['project']})
+                iloop.Strain.one(where={'alias': item['strain_alias'], 'project': self.project})
             except ItemNotFound:
                 try:
-                    pool_object = iloop.Pool.first(where={'alias': item['pool_alias']})
+                    pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 except ItemNotFound:
                     parent_pool_object = None
                     if not _isnan(item['parent_pool_alias']):
                         try:
-                            parent_pool_object = iloop.Pool.first(where={'alias': item['parent_pool_alias']})
+                            parent_pool_object = iloop.Pool.one(where={'alias': item['parent_pool_alias'],
+                                                                       'project': self.project})
                         except ItemNotFound:
                             raise ItemNotFound('missing pool %s' % item['parent_strain_alias'])
                     iloop.Pool.create(alias=item['pool_alias'],
@@ -206,11 +207,12 @@ class StrainsUploader(AbstractDataUploader):
                                       parent_pool=parent_pool_object,
                                       genotype=item['genotype_pool'],
                                       type=item['pool_type'])
-                    pool_object = iloop.Pool.first(where={'alias': item['pool_alias']})
+                    pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 parent_object = None
                 if not _isnan(item['parent_strain_alias']):
                     try:
-                        parent_object = iloop.Strain.first(where={'alias': item['parent_strain_alias']})
+                        parent_object = iloop.Strain.one(where={'alias': item['parent_strain_alias'],
+                                                                'project': self.project})
                     except ItemNotFound:
                         raise ItemNotFound('missing strain %s' % item['parent_strain_alias'])
                 iloop.Strain.create(alias=item['strain_alias'],
@@ -255,7 +257,7 @@ class ExperimentUploader(AbstractDataUploader):
             exp_info = experiment[self.experiment_keys].drop_duplicates()
             exp_info = next(exp_info.itertuples())
             try:
-                existing = iloop.Experiment.first(where={'identifier': exp_id})
+                existing = iloop.Experiment.one(where={'identifier': exp_id, 'project': self.project})
                 timestamp = existing.date.strftime('%Y-%m-%d')
                 if str(timestamp) != exp_info.date and not self.overwrite:
                     raise ItemNotFound('existing mismatching experiment %s' % exp_id)
@@ -328,14 +330,14 @@ class FermentationUploader(ExperimentUploader):
         for exp_id, experiment in self.df.groupby(['experiment']):
             scalars = []
             sample_dict = {}
-            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            experiment_object = iloop.Experiment.one(where={'identifier': exp_id, 'project': self.project})
             sample_info = experiment[['feed_medium', 'batch_medium', 'reactor', 'strain']].drop_duplicates()
             for sample in sample_info.itertuples():
                 sample_dict[sample.reactor] = {
                     'name': sample.reactor,
-                    'strain': iloop.Strain.first(where={'alias': sample.strain}),
-                    'medium': iloop.Medium.first(where={'name': sample.batch_medium}),
-                    'feed_medium': iloop.Medium.first(where={'name': sample.feed_medium})
+                    'strain': iloop.Strain.one(where={'alias': sample.strain, 'project': self.project}),
+                    'medium': iloop.Medium.one(where={'name': sample.batch_medium}),
+                    'feed_medium': iloop.Medium.one(where={'name': sample.feed_medium})
                 }
             for phase_num, phase in experiment.groupby(['phase_start', 'phase_end']):
                 phase_object = get_create_phase(iloop, float(phase.phase_start.iloc[0]),
@@ -378,18 +380,18 @@ class ScreenUploader(ExperimentUploader):
 
     def upload_plates(self, iloop):
         for exp_id, experiment in self.df.groupby(['experiment']):
-            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            experiment_object = iloop.Experiment.one(where={'identifier': exp_id, 'project': self.project})
             plates_df = self.df[['experiment', 'barcode', 'well', 'medium', 'strain', 'plate_model']].drop_duplicates()
             for barcode, plate in plates_df.groupby(['barcode']):
                 plate_info = plate[['well', 'medium', 'strain']].set_index('well')
                 contents = {}
                 for well in plate_info.itertuples():
                     contents[well.Index] = {
-                        'strain': iloop.Strain.first(where={'alias': well.strain, 'project': self.project}),
-                        'medium': iloop.Medium.first(where={'name': well.medium})
+                        'strain': iloop.Strain.one(where={'alias': well.strain, 'project': self.project}),
+                        'medium': iloop.Medium.one(where={'name': well.medium})
                     }
                 try:
-                    plate = iloop.Plate.first(where={'barcode': barcode})
+                    plate = iloop.Plate.one(where={'barcode': barcode, 'project': self.project})
                     plate.update_contents(contents)
                 except ItemNotFound:
                     iloop.Plate.create(barcode=barcode, experiment=experiment_object, contents=contents,
@@ -397,13 +399,13 @@ class ScreenUploader(ExperimentUploader):
 
     def upload_screen(self, iloop):
         for exp_id, experiment in self.df.groupby(['experiment']):
-            experiment_object = iloop.Experiment.first(where={'identifier': exp_id})
+            experiment_object = iloop.Experiment.one(where={'identifier': exp_id, 'project': self.project})
             sample_dict = {}
             scalars = []
 
             for barcode, plate in experiment.groupby(['barcode']):
                 sample_info = plate[['sample_id', 'well']].drop_duplicates()
-                plate_object = iloop.Plate.first(where={'barcode': barcode})
+                plate_object = iloop.Plate.one(where={'barcode': barcode, 'project': self.project})
                 for sample in sample_info.itertuples():
                     sample_dict[sample.sample_id] = {
                         'plate': plate_object,
@@ -446,12 +448,13 @@ class OmicsUploader(ExperimentUploader):
         sample_info = self.df[['experiment', 'medium', 'sample_name', 'strain']].drop_duplicates()
         for sample in sample_info.itertuples():
             try:
-                return iloop.Sample.first(where={'name': sample.sample_name})
+                return iloop.Sample.one(where={'name': sample.sample_name})
             except ItemNotFound:
-                experiment = iloop.Experiment.first(where={'identifier': sample.experiment})
-                medium = iloop.Medium.first(where={'name': sample.medium})
-                strain = iloop.Strain.first(where={'alias': sample.strain})
+                experiment = iloop.Experiment.one(where={'identifier': sample.experiment, 'project': self.project})
+                medium = iloop.Medium.one(where={'name': sample.medium})
+                strain = iloop.Strain.one(where={'alias': sample.strain, 'project': self.project})
                 iloop.Sample.create(experiment=experiment,
+                                    project=self.project,
                                     name=sample.sample_name,
                                     medium=medium,
                                     strain=strain)
@@ -460,7 +463,7 @@ class OmicsUploader(ExperimentUploader):
         omics_test = {'type': 'abundance'}
         for grouping, measurements_for_sample in self.df.groupby(['sample_name', 'phase_start', 'phase_end']):
             sample_name, phase_start, phase_end = grouping
-            sample_object = iloop.Sample.first(where={'name': sample_name})
+            sample_object = iloop.Sample.one(where={'name': sample_name})
             phase_object = get_create_phase(iloop, float(phase_start), float(phase_end),
                                             sample_object.experiment)
             measurements_for_sample.index = measurements_for_sample.reaction_id
@@ -479,9 +482,8 @@ def _cast_non_str_to_float(dictionary):
 
 def get_create_phase(iloop, start, end, experiment):
     try:
-        phase_object = iloop.ExperimentPhase.first(where={'start': start,
-                                                          'end': end,
-                                                          'experiment': experiment})
+        phase_object = iloop.ExperimentPhase.one(where={'start': start, 'end': end,
+                                                        'experiment': experiment})
     except ItemNotFound:
         phase_object = iloop.ExperimentPhase.create(experiment=experiment,
                                                     start=start,

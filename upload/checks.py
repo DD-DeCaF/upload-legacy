@@ -8,7 +8,7 @@ from upload import iloop_client, logger
 from upload.settings import Default
 
 
-IDENTIFIER_TYPES = {'protein', 'reaction'}
+IDENTIFIER_TYPES = frozenset(['protein', 'reaction'])
 
 
 def load_identifiers(type):
@@ -58,15 +58,15 @@ def synonym_to_chebi_name(iloop, project, synonym):
 
 
 def valid_experiment_identifier(iloop, project, identifier):
-    iloop.Experiment.first(where={'identifier': identifier, 'project': project})
+    iloop.Experiment.one(where={'identifier': identifier, 'project': project})
 
 
 def valid_strain_alias(iloop, project, alias):
-    iloop.Strain.first(where={'alias': alias, 'project': project})
+    iloop.Strain.one(where={'alias': alias, 'project': project})
 
 
 def valid_medium_name(iloop, project, name):
-    iloop.Medium.first(where={'name': name})
+    iloop.Medium.one(where={'name': name})
 
 
 def valid_reaction_identifier(iloop, project, identifier):
