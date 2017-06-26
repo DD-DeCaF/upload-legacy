@@ -77,8 +77,8 @@
             "name": "column",
             "title": "column identifier in plate",
             "type": "string",
-			"pattern": "^[0-9]+$",
             "constraints": {
+                "pattern": "^[0-9]+$",
                 "required": true
             }
         },
