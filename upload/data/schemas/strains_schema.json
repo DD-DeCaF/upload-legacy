@@ -2,7 +2,7 @@
   "fields": [
     {
       "name": "pool",
-      "title": "the iloop 'pool alias'",
+      "title": "the name (alias) to use for this pool. A pool is a a sample of individuals, all of which share a common progenitor line, but may since have diverged and no longer have identical genotypes",
       "type": "string",
       "constraints": {
         "required": true,
@@ -25,7 +25,7 @@
     },
     {
       "name": "genotype_pool",
-      "title": "the gnomic definition genotype relative to the parent",
+      "title": "the gnomic definition genotype of the common ancestor of the members in the pool, relative to the parent",
       "type": "string"
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "name": "strain",
-      "title": "the iloop 'strain alias'",
+      "title": "the alias of the strain, aka isolate. Individuals from the same strain have identical genotypes.",
       "type": "string",
       "constraints": {
         "required": true
@@ -46,7 +46,7 @@
     },
     {
       "name": "genotype_strain",
-      "title": "the gnomic definition genotype",
+      "title": "the gnomic definition genotype of the strain, relative to its parent",
       "type": "string"
     },
     {
