@@ -17,4 +17,4 @@ WORKDIR /opt/upload
 ENV PYTHONPATH "${PYTHONPATH}:/opt/upload"
 
 ENTRYPOINT ["gunicorn"]
-CMD ["-w", "4", "-b", "0.0.0.0:7100", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:app"]
+CMD ["-w", "4", "-b", "0.0.0.0:7000", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:app"]

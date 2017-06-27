@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${UPLOAD_PORT:-7100}:7100"
+      - "${UPLOAD_PORT:-7000}:7000"
     volumes:
       - ./:/source
     environment:

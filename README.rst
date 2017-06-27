@@ -21,7 +21,7 @@ by either defining environment variables or writing them to a `.env` file.
 +-----------------+--------------------------+--------------------------------+
 | Variable        | Default Value            | Description                    |
 +=================+==========================+================================+
-| ``UPLOAD_PORT`` | ``7100``                 | Exposed port of the upload     |
+| ``UPLOAD_PORT`` | ``7000``                 | Exposed port of the upload     |
 |                 |                          |  service.                      |
 +-----------------+--------------------------+--------------------------------+
 | ``ILOOP_API``   | ``iloop-backend:80/api`` | Exposed port of the upload     |
