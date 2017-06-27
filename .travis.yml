@@ -37,5 +37,4 @@ deploy:
   provider: script
   script: ./push_to_hub_travis.sh
   on:
-    tags: true
     all_branches: true
