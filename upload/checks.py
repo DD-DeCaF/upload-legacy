@@ -17,10 +17,13 @@ def load_identifiers(type):
 
 
 class OmicsIdentifiers:
-    IDENTIFIERS = {
-        type: load_identifiers(type) for type in IDENTIFIER_TYPES
-    }
-    logger.info('omics identifiers cached')
+    try:
+        IDENTIFIERS = {
+            type: load_identifiers(type) for type in IDENTIFIER_TYPES
+        }
+        logger.info('omics identifiers cached')
+    except AttributeError:
+        logger.info('failed caching omics identifiers, omics upload disabled')
 
 
 def check_safe_partial(func, *args, **keywords):
