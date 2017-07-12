@@ -13,17 +13,17 @@ IDENTIFIER_TYPES = frozenset(['protein', 'reaction'])
 
 def load_identifiers(type):
     iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
-    return set(iloop.BiologicalIdentifier.subset(type=type))
+    return frozenset(iloop.Xref.subset(type=type))
 
 
-class OmicsIdentifiers:
+class XrefIdentifiers:
     try:
         IDENTIFIERS = {
             type: load_identifiers(type) for type in IDENTIFIER_TYPES
         }
-        logger.info('omics identifiers cached')
+        logger.info('xref identifiers cached')
     except AttributeError:
-        logger.info('failed caching omics identifiers, omics upload disabled')
+        logger.info('failed caching xref identifiers, omics/xref upload disabled')
 
 
 def check_safe_partial(func, *args, **keywords):
@@ -73,12 +73,12 @@ def valid_medium_name(iloop, project, name):
 
 
 def valid_reaction_identifier(iloop, project, identifier):
-    if identifier not in OmicsIdentifiers.IDENTIFIERS['reaction']:
+    if identifier not in XrefIdentifiers.IDENTIFIERS['reaction']:
         raise ValueError('not a valid reaction identifier')
 
 
 def valid_protein_identifier(iloop, project, identifier):
-    if identifier not in OmicsIdentifiers.IDENTIFIERS['protein']:
+    if identifier not in XrefIdentifiers.IDENTIFIERS['protein']:
         raise ValueError('not a valid protein identifier')
 
 

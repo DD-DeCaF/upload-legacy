@@ -13,10 +13,12 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONASYNCIODEBUG=1
       - ILOOP_TOKEN
-      - ILOOP_API=${ILOOP_API:-iloop-backend:80/api}
+      - ILOOP_API=${ILOOP_API:-http://iloop-backend:80/api}
     networks:
-      - iloop-net
+      iloop:
+        aliases:
+          - upload-backend
 
 networks:
-  iloop-net:
+  iloop:
     external: true

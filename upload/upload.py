@@ -425,18 +425,19 @@ class ScreenUploader(ExperimentUploader):
             experiment_object.add_samples({'samples': sample_dict, 'scalars': scalars})
 
 
-class OmicsUploader(ExperimentUploader):
-    """uploader for 'omics' data
+class XrefMeasurementUploader(ExperimentUploader):
+    """uploader for data associated with an entity define in an external database, e.g. a sequence or a reaction
     """
 
-    def __init__(self, project, file_name, custom_checks, omics_type, overwrite=True):
-        super(OmicsUploader, self).__init__(project, type='fermentation', sample_name='sample_name',
-                                            overwrite=overwrite)
+    def __init__(self, project, file_name, custom_checks, subject_type, overwrite=True):
+        super(XrefMeasurementUploader, self).__init__(project, type='fermentation', sample_name='sample_name',
+                                                      overwrite=overwrite)
         self.experiment_keys = ['project', 'experiment', 'description', 'date', 'temperature']
-        self.df = inspected_data_frame(file_name, 'fluxes', custom_checks=custom_checks)
+        inspection_key = dict(protein='protein_abundances', reaction='fluxes')[subject_type]
+        self.df = inspected_data_frame(file_name, inspection_key, custom_checks=custom_checks)
         self.df['project'] = self.project.code
         self.samples_df = self.df
-        self.omics_type = omics_type
+        self.subject_type = subject_type
         self.df.dropna(0, subset=['value'], inplace=True)
 
     def upload(self, iloop):
@@ -460,17 +461,23 @@ class OmicsUploader(ExperimentUploader):
                                     strain=strain)
 
     def upload_measurements(self, iloop):
-        omics_test = {'type': 'abundance'}
-        for grouping, measurements_for_sample in self.df.groupby(['sample_name', 'phase_start', 'phase_end']):
+        accessions_df = self.df['xref_id'].str.split(':', expand=True)
+        accessions_df.columns = ['db_name', 'accession']
+        self.df = self.df.join(accessions_df)
+        measurement_grouping = self.df.groupby(['sample_name', 'phase_start', 'phase_end'])
+        unique_df = measurement_grouping[['mode', 'db_name']].nunique()
+        if (unique_df['mode'] != 1).any() or (unique_df['db_name'] != 1).any():
+            raise ValueError('multiple mode/db_names in upload not supported')
+        for grouping, df in measurement_grouping:
             sample_name, phase_start, phase_end = grouping
             sample_object = iloop.Sample.one(where={'name': sample_name})
             phase_object = get_create_phase(iloop, float(phase_start), float(phase_end),
                                             sample_object.experiment)
-            measurements_for_sample.index = measurements_for_sample.reaction_id
-            measurement_dict = measurements_for_sample.value.to_dict()
-            logger.info(str(measurement_dict))
-            sample_object.add_omics(phase=phase_object, type=self.omics_type, test=omics_test,
-                                    measurements=measurement_dict)
+            sample_object.add_xref_measurements(phase=phase_object, type=self.subject_type,
+                                                values=list(df['value']),
+                                                accessions=list(df['accession']),
+                                                db_name=df['db_name'].iat[0],
+                                                mode=df['mode'].iat[0])
 
 
 def _cast_non_str_to_float(dictionary):

@@ -9,8 +9,8 @@ import io
 import requests
 import json
 from functools import wraps, partial
-from upload.upload import (MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader, OmicsUploader,
-                           get_schema)
+from upload.upload import (MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader,
+                           XrefMeasurementUploader, get_schema)
 from tempfile import mkstemp
 from potion_client.exceptions import ItemNotFound
 from upload import iloop_client, __version__, logger
@@ -33,6 +33,7 @@ def call_iloop_with_token(f):
         response = await f(request, iloop)
         assert response.status == 200, 'call to iloop failed with {}'.format(response.status)
         return response
+
     return wrapper
 
 
@@ -111,18 +112,18 @@ async def upload(request, iloop):
                                             synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
         if data['what'] == 'fluxes':
             content = data['file[0]']
-            uploader = OmicsUploader(project, write_temp_csv(content),
-                                     custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
-                                                    check_safe_partial(reaction_id_unknown, iloop, None),
-                                                    check_safe_partial(strain_alias_unknown, iloop, project)],
-                                     omics_type='fluxomics')
+            uploader = XrefMeasurementUploader(project, write_temp_csv(content),
+                                               custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
+                                                              check_safe_partial(reaction_id_unknown, iloop, None),
+                                                              check_safe_partial(strain_alias_unknown, iloop, project)],
+                                               subject_type='reaction')
         if data['what'] == 'protein_abundances':
             content = data['file[0]']
-            uploader = OmicsUploader(project, write_temp_csv(content),
-                                     custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
-                                                    check_safe_partial(protein_id_unknown, iloop, None),
-                                                    check_safe_partial(strain_alias_unknown, iloop, project)],
-                                     omics_type='proteomics')
+            uploader = XrefMeasurementUploader(project, write_temp_csv(content),
+                                               custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
+                                                              check_safe_partial(protein_id_unknown, iloop, None),
+                                                              check_safe_partial(strain_alias_unknown, iloop, project)],
+                                               subject_type='protein')
     except CParserError:
         return web.json_response(
             data={'valid': False, 'tables': [{'errors': [{'message': 'failed to parse csv file '}]}]})
