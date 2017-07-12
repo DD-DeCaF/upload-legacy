@@ -75,11 +75,24 @@
             }
         },
         {
-            "name": "protein_id",
-            "title": "the protein identifier (currently only uniprot supported)",
+            "name": "xref_id",
+            "title": "the identifier for the protein prefixed by namespace e.g. UniProtKB:P0AE37",
             "type": "string",
             "constraints": {
                 "required": true
+            }
+        },
+        {
+            "name": "mode",
+            "title": "the mode of quantification, relative (e.g. a ratio to a control sample), quantitative (values can be compared with each other) or arbitrary (any number).",
+            "type": "string",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "relative",
+                    "quantitative",
+                    "arbitrary"
+                ]
             }
         },
 		{

@@ -6,7 +6,7 @@
 
 ## Install and start the upload service.
 start:
-	docker network inspect iloop-net || docker network create iloop-net
+	docker network inspect iloop || docker network create iloop
 	docker-compose up -d --build
 
 ## Read the logs.

@@ -75,16 +75,29 @@
             }
         },
         {
-            "name": "reaction_id",
-            "title": "the bigg identifier for the reaction",
+            "name": "xref_id",
+            "title": "the identifier for the reaction prefixed by the namespace e.g. BiGG:SUCCtm",
             "type": "string",
             "constraints": {
                 "required": true
             }
         },
+        {
+            "name": "mode",
+            "title": "the mode of quantification, relative (e.g. a ratio to a control sample), quantitative (values can be compared with each other) or arbitrary (any number).",
+            "type": "string",
+            "constraints": {
+                "required": true,
+                "enum": [
+                    "relative",
+                    "quantitative",
+                    "arbitrary"
+                ]
+            }
+        },
 		{
 			"name": "value",
-			"title": "the measured flux",
+			"title": "the measured flux (in mmol/(g * DWH * h) if quantitative mode)",
 			"type": "number",
             "constraints": {
                 "required": true

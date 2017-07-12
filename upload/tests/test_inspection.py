@@ -82,24 +82,24 @@ def test_fermentation_inspection_with_iloop(examples):
 def test_fluxomics_inspection_with_iloop(examples):
     iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
     project = iloop.Project.first(where={'code': TEST_PROJECT})
-    up = cup.OmicsUploader(project,
-                           join(examples, 'fluxes.csv'),
-                           omics_type='fluxomics',
-                           custom_checks=[
-                               partial(medium_name_unknown, iloop, None),
-                               partial(reaction_id_unknown, iloop, None),
-                               partial(strain_alias_unknown, iloop, project)])
+    up = cup.XrefMeasurementUploader(project,
+                                     join(examples, 'fluxes.csv'),
+                                     subject_type='reaction',
+                                     custom_checks=[
+                                         partial(medium_name_unknown, iloop, None),
+                                         partial(reaction_id_unknown, iloop, None),
+                                         partial(strain_alias_unknown, iloop, project)])
     assert isinstance(up.samples_df, pd.DataFrame)
 
 
 def test_proteomics_inspection_with_iloop(examples):
     iloop = iloop_client(Default.ILOOP_API, Default.ILOOP_TOKEN)
     project = iloop.Project.first(where={'code': TEST_PROJECT})
-    up = cup.OmicsUploader(project,
-                           join(examples, 'protein_abundances.csv'),
-                           omics_type='proteomics',
-                           custom_checks=[
-                               partial(medium_name_unknown, iloop, None),
-                               partial(protein_id_unknown, iloop, None),
-                               partial(strain_alias_unknown, iloop, project)])
+    up = cup.XrefMeasurementUploader(project,
+                                     join(examples, 'protein_abundances.csv'),
+                                     subject_type='protein',
+                                     custom_checks=[
+                                         partial(medium_name_unknown, iloop, None),
+                                         partial(protein_id_unknown, iloop, None),
+                                         partial(strain_alias_unknown, iloop, project)])
     assert isinstance(up.samples_df, pd.DataFrame)
