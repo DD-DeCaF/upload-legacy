@@ -195,7 +195,7 @@ def reaction_id_unknown(iloop, project, errors, columns, row_number, state):
     identifier_unknown(
         iloop,
         None,
-        'reaction_id',
+        'xref_id',
         valid_reaction_identifier,
         message,
         errors, columns, row_number
@@ -210,7 +210,7 @@ def protein_id_unknown(iloop, project, errors, columns, row_number, state):
     identifier_unknown(
         iloop,
         None,
-        'protein_id',
+        'xref_id',
         valid_protein_identifier,
         message,
         errors, columns, row_number
