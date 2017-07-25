@@ -42,9 +42,8 @@ def test_media_inspection(examples):
 def test_strains_inspection(examples):
     up = cup.StrainsUploader(PROJECT_OBJECT, join(examples, 'strains.csv'))
     assert isinstance(up.df, pd.DataFrame)
-    assert up.iloop_args[0]['strain_alias'] == 'scref'
-    assert up.iloop_args[1]['strain_alias'] == 'ecref'
-    assert up.iloop_args[2]['strain_alias'] == 'eggs'
+    assert len(up.iloop_args) == len(up.df)
+    assert set(strain['strain_alias'] for strain in up.iloop_args) == set(up.df['strain'])
     with pytest.raises(ValueError) as excinfo:
         cup.StrainsUploader(PROJECT_OBJECT, join(examples, 'strains-invalid.csv'))
     report = json.loads(str(excinfo.value))

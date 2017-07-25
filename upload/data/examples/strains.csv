@@ -4,3 +4,4 @@ test1,ale_population,,,scref,,,True,SCE
 test1,ale_population,,,spam,,eggs,False,SCE
 test1,ale_population,,,eggs,,scref,False,SCE
 test3,ale_population,,,ecref,,,True,ECO
+test4,library,,,puref,,,True,PPU
