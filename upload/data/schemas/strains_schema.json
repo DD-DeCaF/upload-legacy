@@ -70,7 +70,8 @@
         "required": true,
         "enum": [
           "SCE",
-          "ECO"
+          "ECO",
+          "PPU"
         ]
       }
     }
