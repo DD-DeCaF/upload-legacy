@@ -16,7 +16,8 @@ from potion_client.exceptions import ItemNotFound
 from upload import iloop_client, __version__, logger
 from upload.settings import Default
 from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
-                           reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial)
+                           reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial,
+                           iloop_cache)
 
 UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
@@ -84,45 +85,45 @@ async def upload(request, iloop):
     if data['what'] not in UPLOAD_TYPES:
         raise web.HTTPBadRequest(text='{"status": "expected {} component of post"}'.format(', '.join(UPLOAD_TYPES)))
     uploader = None
-
+    iloop_cache.update(iloop, lite=True)
     try:
         if data['what'] == 'media':
             content = data['file[0]']
             uploader = MediaUploader(project, write_temp_csv(content),
-                                     custom_checks=[check_safe_partial(compound_name_unknown, iloop, None)],
-                                     synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
+                                     custom_checks=[check_safe_partial(compound_name_unknown, None)],
+                                     synonym_mapper=partial(synonym_to_chebi_name, None))
         if data['what'] == 'strains':
             content = data['file[0]']
             uploader = StrainsUploader(project, write_temp_csv(content))
         if data['what'] == 'screen':
             content = data['file[0]']
             uploader = ScreenUploader(project, write_temp_csv(content),
-                                      custom_checks=[check_safe_partial(compound_name_unknown, iloop, None),
-                                                     check_safe_partial(medium_name_unknown, iloop, None),
-                                                     check_safe_partial(strain_alias_unknown, iloop, project)],
-                                      synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
+                                      custom_checks=[check_safe_partial(compound_name_unknown, None),
+                                                     check_safe_partial(medium_name_unknown, None),
+                                                     check_safe_partial(strain_alias_unknown, project)],
+                                      synonym_mapper=partial(synonym_to_chebi_name, None))
         if data['what'] == 'fermentation':
             content_samples = data['file[0]']
             content_physiology = data['file[1]']
             uploader = FermentationUploader(project, write_temp_csv(content_samples),
                                             write_temp_csv(content_physiology),
-                                            custom_checks=[check_safe_partial(compound_name_unknown, iloop, None),
-                                                           check_safe_partial(medium_name_unknown, iloop, None),
-                                                           check_safe_partial(strain_alias_unknown, iloop, project)],
-                                            synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
+                                            custom_checks=[check_safe_partial(compound_name_unknown, None),
+                                                           check_safe_partial(medium_name_unknown, None),
+                                                           check_safe_partial(strain_alias_unknown, project)],
+                                            synonym_mapper=partial(synonym_to_chebi_name, None))
         if data['what'] == 'fluxes':
             content = data['file[0]']
             uploader = XrefMeasurementUploader(project, write_temp_csv(content),
-                                               custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
-                                                              check_safe_partial(reaction_id_unknown, iloop, None),
-                                                              check_safe_partial(strain_alias_unknown, iloop, project)],
+                                               custom_checks=[check_safe_partial(medium_name_unknown, None),
+                                                              check_safe_partial(reaction_id_unknown, None),
+                                                              check_safe_partial(strain_alias_unknown, project)],
                                                subject_type='reaction')
         if data['what'] == 'protein_abundances':
             content = data['file[0]']
             uploader = XrefMeasurementUploader(project, write_temp_csv(content),
-                                               custom_checks=[check_safe_partial(medium_name_unknown, iloop, None),
-                                                              check_safe_partial(protein_id_unknown, iloop, None),
-                                                              check_safe_partial(strain_alias_unknown, iloop, project)],
+                                               custom_checks=[check_safe_partial(medium_name_unknown, None),
+                                                              check_safe_partial(protein_id_unknown, None),
+                                                              check_safe_partial(strain_alias_unknown, project)],
                                                subject_type='protein')
     except CParserError:
         return web.json_response(
