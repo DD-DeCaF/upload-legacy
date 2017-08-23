@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from upload.constants import measurement_test, compound_skip
 from upload.checks import genotype_not_gnomic
-from upload import _isnan, logger
+from upload import _isnan
 
 
 def place_holder_compound_synonym_mapper(synonym):
