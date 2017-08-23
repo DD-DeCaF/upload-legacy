@@ -70,10 +70,10 @@ def test_fermentation_inspection_with_iloop(examples):
                                   join(examples, 'samples.csv'),
                                   join(examples, 'physiology.csv'),
                                   custom_checks=[
-                                      partial(compound_name_unknown, iloop, None),
-                                      partial(medium_name_unknown, iloop, None),
-                                      partial(strain_alias_unknown, iloop, project)],
-                                  synonym_mapper=partial(synonym_to_chebi_name, iloop, None))
+                                      partial(compound_name_unknown, None),
+                                      partial(medium_name_unknown, None),
+                                      partial(strain_alias_unknown, project)],
+                                  synonym_mapper=partial(synonym_to_chebi_name, None))
     assert isinstance(up.samples_df, pd.DataFrame)
     assert isinstance(up.physiology_df, pd.DataFrame)
 
@@ -85,9 +85,9 @@ def test_fluxomics_inspection_with_iloop(examples):
                                      join(examples, 'fluxes.csv'),
                                      subject_type='reaction',
                                      custom_checks=[
-                                         partial(medium_name_unknown, iloop, None),
-                                         partial(reaction_id_unknown, iloop, None),
-                                         partial(strain_alias_unknown, iloop, project)])
+                                         partial(medium_name_unknown, None),
+                                         partial(reaction_id_unknown, None),
+                                         partial(strain_alias_unknown, project)])
     assert isinstance(up.samples_df, pd.DataFrame)
 
 
@@ -98,7 +98,7 @@ def test_proteomics_inspection_with_iloop(examples):
                                      join(examples, 'protein_abundances.csv'),
                                      subject_type='protein',
                                      custom_checks=[
-                                         partial(medium_name_unknown, iloop, None),
-                                         partial(protein_id_unknown, iloop, None),
-                                         partial(strain_alias_unknown, iloop, project)])
+                                         partial(medium_name_unknown, None),
+                                         partial(protein_id_unknown, None),
+                                         partial(strain_alias_unknown, project)])
     assert isinstance(up.samples_df, pd.DataFrame)
