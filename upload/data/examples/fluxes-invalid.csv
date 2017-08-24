@@ -1,0 +1,3 @@
+experiment,phase_start,phase_end,sample_name,description,date,temperature,operation,medium,strain,xref_id,mode,value
+flux1,0,29,flux1A1,flux group a,2017-06-10,37,nothing,my-batch,spam,bigg.reaction:not-an-id,quantitative,15
+flux1,0,29,flux1A1,flux group a,2017-06-10,37,nothing,my-batch,spam,BiGG:ENO,quantitative,15

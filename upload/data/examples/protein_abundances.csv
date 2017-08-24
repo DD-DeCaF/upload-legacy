@@ -1,10 +1,10 @@
 experiment,phase_start,phase_end,sample_name,description,date,temperature,operation,medium,strain,xref_id,mode,value
-protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AC38,quantitative,15
-protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AC38,quantitative,14.5
-protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AE37,quantitative,0.22
-protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AC38,quantitative,14
-protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AE37,quantitative,0.2
-protein1,0,29,protein1C1,protein group a,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AC38,quantitative,15.1
-protein1,0,29,protein1C1,protein group a,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AE37,quantitative,0.21
-protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AC38,quantitative,14.1
-protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecref,uniprot:P0AE37,quantitative,0.2
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AC38,quantitative,15
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AC38,quantitative,14.5
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AE37,quantitative,0.22
+protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AC38,quantitative,14
+protein1,0,29,protein1B1,protein group b,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AE37,quantitative,0.2
+protein1,0,29,protein1C1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AC38,quantitative,15.1
+protein1,0,29,protein1C1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AE37,quantitative,0.21
+protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AC38,quantitative,14.1
+protein1,0,29,protein1D1,protein group b,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:P0AE37,quantitative,0.2
