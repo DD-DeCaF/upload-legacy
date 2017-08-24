@@ -1,0 +1,2 @@
+experiment,phase_start,phase_end,sample_name,description,date,temperature,operation,medium,strain,xref_id,mode,value
+protein1,0,29,protein1A1,protein group a,2017-06-10,37,nothing,my-batch,ecoeth1,uniprot:not-an-identifier,quantitative,15

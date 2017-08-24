@@ -124,7 +124,7 @@ def identifier_unknown(project, entity, check_function, message, errors, columns
             try:
                 if column['value']:
                     check_function(project, column['value'])
-            except (ValueError, ItemNotFound):
+            except (ValueError, ItemNotFound, AssertionError):
                 message = message.format(
                     row_number=row_number,
                     column_number=column['number'],
