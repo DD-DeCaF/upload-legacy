@@ -26,4 +26,4 @@ def _isnan(value):
 
 
 __author__ = 'Henning Redestig'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
