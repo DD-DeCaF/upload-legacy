@@ -7,6 +7,7 @@ import json
 from os.path import abspath, dirname, join, exists
 from requests import HTTPError
 from copy import deepcopy
+from upload import logger
 
 from upload.constants import measurement_test, compound_skip
 from upload.checks import genotype_not_gnomic
@@ -259,12 +260,15 @@ class ExperimentUploader(AbstractDataUploader):
             try:
                 existing = iloop.Experiment.one(where={'identifier': exp_id, 'project': self.project})
                 timestamp = existing.date.strftime('%Y-%m-%d')
-                if str(timestamp) != exp_info.date and not self.overwrite:
-                    raise ItemNotFound('existing mismatching experiment %s' % exp_id)
-                elif self.overwrite:
-                    existing.archive()
-                    raise ItemNotFound
+                if str(timestamp) != exp_info.date:
+                    if not self.overwrite:
+                        raise HTTPError('existing mismatching experiment %s' % exp_id)
+                    else:
+                        logger.info('archiving existing experiment {}'.format(exp_id))
+                        existing.archive()
+                        raise ItemNotFound
             except ItemNotFound:
+                logger.info('creating new experiment {}'.format(exp_id))
                 sample_info = experiment[conditions_keys].set_index(self.sample_name)
                 conditions = _cast_non_str_to_float(experiment[self.experiment_keys].iloc[0].to_dict())
                 conditions = {key: value for key, value in conditions.items() if not _isnan(value)}
@@ -448,10 +452,11 @@ class XrefMeasurementUploader(ExperimentUploader):
     def upload_sample_info(self, iloop):
         sample_info = self.df[['experiment', 'medium', 'sample_name', 'strain']].drop_duplicates()
         for sample in sample_info.itertuples():
+            experiment = iloop.Experiment.one(where={'identifier': sample.experiment, 'project': self.project})
             try:
-                return iloop.Sample.one(where={'name': sample.sample_name})
+                return iloop.Sample.one(where={'name': sample.sample_name, 'experiment': experiment})
             except ItemNotFound:
-                experiment = iloop.Experiment.one(where={'identifier': sample.experiment, 'project': self.project})
+                logger.info('creating new sample {}'.format(sample.sample_name))
                 medium = iloop.Medium.one(where={'name': sample.medium})
                 strain = iloop.Strain.one(where={'alias': sample.strain, 'project': self.project})
                 iloop.Sample.create(experiment=experiment,
@@ -470,7 +475,9 @@ class XrefMeasurementUploader(ExperimentUploader):
             raise ValueError('multiple mode/db_names in upload not supported')
         for grouping, df in measurement_grouping:
             sample_name, phase_start, phase_end = grouping
-            sample_object = iloop.Sample.one(where={'name': sample_name})
+            experiment_object = iloop.Experiment.one(where={'identifier': df['experiment'].iat[0],
+                                                            'project': self.project})
+            sample_object = iloop.Sample.one(where={'name': sample_name, 'experiment': experiment_object})
             phase_object = get_create_phase(iloop, float(phase_start), float(phase_end),
                                             sample_object.experiment)
             sample_object.add_xref_measurements(phase=phase_object, type=self.subject_type,
