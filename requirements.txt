@@ -4,7 +4,7 @@ aiohttp_cors
 potion_client>=2.5.1
 requests
 codecov
-gnomic
+gnomic==0.7.0
 gunicorn
 pytest-cov
 pandas
