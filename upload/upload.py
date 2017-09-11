@@ -481,8 +481,8 @@ class XrefMeasurementUploader(ExperimentUploader):
             phase_object = get_create_phase(iloop, float(phase_start), float(phase_end),
                                             sample_object.experiment)
             sample_object.add_xref_measurements(phase=phase_object, type=self.subject_type,
-                                                values=list(df['value']),
-                                                accessions=list(df['accession']),
+                                                values=df['value'].tolist(),
+                                                accessions=df['accession'].tolist(),
                                                 db_name=df['db_name'].iat[0],
                                                 mode=df['mode'].iat[0])
 
