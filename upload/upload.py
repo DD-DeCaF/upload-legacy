@@ -91,7 +91,7 @@ class MediaUploader(AbstractDataUploader):
     inspect file using 'media_schema.json'. Upload if no existing medium with the exact same recipe. Key for the
     medium is generated using current date.
 
-    :param project: project code
+    :param project: project object
     :param file_name: name of the csv file to read
     """
 
@@ -149,7 +149,7 @@ class StrainsUploader(AbstractDataUploader):
     inspect file using 'strains_schema.json' then sort the input data frame to make sure that parents are created
     before their children to avoid broken links.
 
-    :param project: project code
+    :param project: project object
     :param file_name: name of the csv file to read
     """
 
@@ -290,7 +290,7 @@ class FermentationUploader(ExperimentUploader):
     'physiology_schema.json' respectively. Upload first the experiment details (optionally overwrite any existing
     experiment with the same name first). Then upload the samples with associated  physiology data.
 
-    :param project: project code
+    :param project: project object
     :param samples_file_name: name of the csv file to read
     :param physiology_file_name: name of the csv file to read
     """

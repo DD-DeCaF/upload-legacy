@@ -71,7 +71,7 @@ def write_temp_csv(content):
 
 @call_iloop_with_token
 async def list_projects(request, iloop):
-    projects = [{'display': project.name, 'value': project.code} for project in iloop.Project.instances()]
+    projects = [{'display': project.name, 'value': project.id} for project in iloop.Project.instances()]
     return web.json_response(data=projects)
 
 
@@ -79,9 +79,9 @@ async def list_projects(request, iloop):
 async def upload(request, iloop):
     data = await request.post()
     try:
-        project = iloop.Project.one(where={'code': data['project_id']})
+        project = iloop.Project(data['project_id'])
     except requests.exceptions.HTTPError:
-        raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier"}')
+        raise web.HTTPBadRequest(text='{"status": "failed to resolve project identifier {}"}'.format(data['project_id']))
     if data['what'] not in UPLOAD_TYPES:
         raise web.HTTPBadRequest(text='{"status": "expected {} component of post"}'.format(', '.join(UPLOAD_TYPES)))
     uploader = None
