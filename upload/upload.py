@@ -131,19 +131,8 @@ class MediaUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for medium_name, ingredients, item in self.iloop_args:
-            media_object = None
-            try:
-                try:
-                    current = iloop.Medium.read_find_media_with_ingredients(supplements=ingredients)
-                except HTTPError:
-                    current = []
-                if not any(medium_name == current_medium.name for current_medium in current):
-                    media_object = iloop.Medium.create(**item)
-                    media_object.update_contents(ingredients)
-            except HTTPError:
-                if media_object:
-                    media_object.archive()
-                raise
+            media_object = iloop.Medium.create(**item, organization=self.project.organization)
+            media_object.update_contents(ingredients)
 
 
 class StrainsUploader(AbstractDataUploader):

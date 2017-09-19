@@ -17,7 +17,7 @@ from upload import iloop_client, __version__, logger
 from upload.settings import Default
 from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
                            reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial,
-                           iloop_cache)
+                           medium_name_already_defined, iloop_cache)
 
 UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
@@ -90,7 +90,8 @@ async def upload(request, iloop):
         if data['what'] == 'media':
             content = data['file[0]']
             uploader = MediaUploader(project, write_temp_csv(content),
-                                     custom_checks=[check_safe_partial(compound_name_unknown, None)],
+                                     custom_checks=[check_safe_partial(compound_name_unknown, None),
+                                                    check_safe_partial(medium_name_already_defined, None)],
                                      synonym_mapper=partial(synonym_to_chebi_name, None))
         if data['what'] == 'strains':
             content = data['file[0]']
