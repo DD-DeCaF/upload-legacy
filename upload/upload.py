@@ -133,7 +133,10 @@ class MediaUploader(AbstractDataUploader):
         for medium_name, ingredients, item in self.iloop_args:
             media_object = None
             try:
-                current = iloop.Medium.read_find_media_with_ingredients(supplements=ingredients)
+                try:
+                    current = iloop.Medium.read_find_media_with_ingredients(supplements=ingredients)
+                except HTTPError:
+                    current = []
                 if not any(medium_name == current_medium.name for current_medium in current):
                     media_object = iloop.Medium.create(**item)
                     media_object.update_contents(ingredients)
