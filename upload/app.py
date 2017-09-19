@@ -139,8 +139,8 @@ async def upload(request, iloop):
         return web.json_response(data={'valid': True})
 
 
-async def hello(request):
-    return web.Response(text='hi, this is upload v' + __version__)
+async def version(request):
+    return web.Response(text='v' + __version__)
 
 
 async def schema(request):
@@ -154,7 +154,7 @@ async def schema(request):
 
 ROUTE_CONFIG = [
     ('POST', '/upload', upload),
-    ('GET', '/upload/hello', hello),
+    ('GET', '/upload/version', version),
     ('GET', '/upload/list_projects', list_projects),
     ('GET', '/upload/schema/{what}', schema),
 ]
