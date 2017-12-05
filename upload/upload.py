@@ -91,7 +91,7 @@ class MediaUploader(AbstractDataUploader):
     inspect file using 'media_schema.json'. Upload if no existing medium with the exact same recipe. Key for the
     medium is generated using current date.
 
-    :param project: project code
+    :param project: project object
     :param file_name: name of the csv file to read
     """
 
@@ -131,16 +131,8 @@ class MediaUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for medium_name, ingredients, item in self.iloop_args:
-            media_object = None
-            try:
-                current = iloop.Medium.read_find_media_with_ingredients(supplements=ingredients)
-                if not any(medium_name == current_medium.name for current_medium in current):
-                    media_object = iloop.Medium.create(**item)
-                    media_object.update_contents(ingredients)
-            except HTTPError:
-                if media_object:
-                    media_object.archive()
-                raise
+            media_object = iloop.Medium.create(**item, organization=self.project.organization)
+            media_object.update_contents(ingredients)
 
 
 class StrainsUploader(AbstractDataUploader):
@@ -149,7 +141,7 @@ class StrainsUploader(AbstractDataUploader):
     inspect file using 'strains_schema.json' then sort the input data frame to make sure that parents are created
     before their children to avoid broken links.
 
-    :param project: project code
+    :param project: project object
     :param file_name: name of the csv file to read
     """
 
@@ -290,7 +282,7 @@ class FermentationUploader(ExperimentUploader):
     'physiology_schema.json' respectively. Upload first the experiment details (optionally overwrite any existing
     experiment with the same name first). Then upload the samples with associated  physiology data.
 
-    :param project: project code
+    :param project: project object
     :param samples_file_name: name of the csv file to read
     :param physiology_file_name: name of the csv file to read
     """

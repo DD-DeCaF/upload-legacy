@@ -88,6 +88,10 @@ def valid_medium_name(project, name):
     assert name in iloop_cache.identifiers['medium']
 
 
+def undefined_medium_name(project, name):
+    assert name not in iloop_cache.identifiers['medium']
+
+
 def valid_reaction_identifier(project, identifier):
     assert identifier in iloop_cache.identifiers['reaction']
 
@@ -177,6 +181,19 @@ def strain_alias_unknown(project, errors, columns, row_number, state):
         project,
         'strain',
         valid_strain_alias,
+        message,
+        errors, columns, row_number
+    )
+
+
+@check('medium-name-unknown', type='structure', context='body', after='duplicate-row')
+def medium_name_already_defined(project, errors, columns, row_number, state):
+    message = ('Row {row_number} has already existing medium name "{value}" '
+               'in column {column_number}. Choose a different name.')
+    identifier_unknown(
+        None,
+        'medium',
+        undefined_medium_name,
         message,
         errors, columns, row_number
     )
