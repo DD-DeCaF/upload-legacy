@@ -9,7 +9,7 @@ services:
     ports:
       - "${UPLOAD_PORT:-7000}:7000"
     volumes:
-      - ./:/source
+      - ./:/opt/upload
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONASYNCIODEBUG=1
