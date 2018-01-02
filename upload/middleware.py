@@ -1,18 +1,4 @@
-import logging
-
-from aiohttp import web
-from raven import Client
-from raven.conf import setup_logging
-from raven.handlers.logging import SentryHandler
-
-from . import settings
-
-
-# Configure Raven to capture warning logs
-client = Client(settings.Default.SENTRY_DSN)
-handler = SentryHandler(client)
-handler.setLevel(logging.WARNING)
-setup_logging(handler)
+from . import raven_client
 
 
 async def raven_middleware(app, handler):
@@ -21,6 +7,6 @@ async def raven_middleware(app, handler):
         try:
             return await handler(request)
         except Exception:
-            client.captureException()
+            raven_client.captureException()
             raise
     return middleware_handler
