@@ -9,3 +9,4 @@ gunicorn
 pytest-cov
 pandas
 goodtables==1.0.0a16
+raven==6.4.0
