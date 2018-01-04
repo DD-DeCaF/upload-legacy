@@ -18,6 +18,7 @@ from upload.settings import Default
 from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
                            reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial,
                            medium_name_already_defined, iloop_cache)
+from upload.middleware import raven_middleware
 
 UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
@@ -160,7 +161,7 @@ ROUTE_CONFIG = [
     ('GET', '/upload/schema/{what}', schema),
 ]
 
-app = web.Application()
+app = web.Application(middlewares=[raven_middleware])
 # Configure default CORS settings.
 cors = aiohttp_cors.setup(app, defaults={
     "*": aiohttp_cors.ResourceOptions(
