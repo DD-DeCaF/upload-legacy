@@ -99,7 +99,8 @@
             "type": "number",
             "constraints": {
                 "maximum": 50,
-                "minimum": 0
+                "minimum": 0,
+                "required": true
             }
         }
     ]
