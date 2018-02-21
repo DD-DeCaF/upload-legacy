@@ -5,10 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: "-w 2 -b 0.0.0.0:7000 -t 150 -k aiohttp.worker.GunicornWebWorker --reload upload.app:app"
     ports:
       - "${UPLOAD_PORT:-7000}:7000"
     volumes:
-      - ./:/source
+      - ./:/opt/upload
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONASYNCIODEBUG=1
