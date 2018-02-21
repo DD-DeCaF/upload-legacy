@@ -131,6 +131,7 @@ class MediaUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for medium_name, ingredients, item in self.iloop_args:
+            item = {k: v.strip() for k, v in item.items() if isinstance(v, str)}
             media_object = iloop.Medium.create(**item, organization=self.project.organization)
             media_object.update_contents(ingredients)
 
@@ -182,6 +183,7 @@ class StrainsUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for item in self.iloop_args:
+            item = {k: v.strip() for k, v in item.items() if isinstance(v, str)}
             try:
                 iloop.Strain.one(where={'alias': item['strain_alias'], 'project': self.project})
             except ItemNotFound:

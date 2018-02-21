@@ -11,7 +11,10 @@
         {
             "name": "description",
             "title": "experiment description",
-            "type": "string"
+            "type": "string",
+            "constraints": {
+                "required": true
+            }
         },
         {
             "name": "date",
@@ -53,6 +56,7 @@
             "title": "name of the plate, to identify the plate within this experiment",
             "type": "string",
             "constraints": {
+                "pattern": "^[0-9A-Za-z_-]+$",
                 "required": true
             }
         },
