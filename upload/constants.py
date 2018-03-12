@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 synonym_to_chebi_name_dict = {
     'o2': 'dioxygen',
     'co2': 'carbon dioxide',
