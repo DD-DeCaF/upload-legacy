@@ -145,7 +145,9 @@ class MediaUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for medium_name, ingredients, item in self.iloop_args:
-            item = {k: v.strip() for k, v in item.items() if isinstance(v, str)}
+            for k, v in item.items():
+                if isinstance(v, str):
+                    item[k] = v.strip()
             media_object = iloop.Medium.create(**item, organization=self.project.organization)
             media_object.update_contents(ingredients)
 
@@ -205,7 +207,7 @@ class StrainsUploader(AbstractDataUploader):
                     pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 except ItemNotFound:
                     parent_pool_object = None
-                    if not _isnan(item['parent_pool_alias']):
+                    if 'parent_pool_alias' in item and not _isnan(item['parent_pool_alias']):
                         try:
                             parent_pool_object = iloop.Pool.one(where={'alias': item['parent_pool_alias'],
                                                                        'project': self.project})
@@ -218,7 +220,7 @@ class StrainsUploader(AbstractDataUploader):
                                       type=item['pool_type'])
                     pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 parent_object = None
-                if not _isnan(item['parent_strain_alias']):
+                if 'parent_strain_alias' in item and not _isnan(item['parent_strain_alias']):
                     try:
                         parent_object = iloop.Strain.one(where={'alias': item['parent_strain_alias'],
                                                                 'project': self.project})
@@ -228,7 +230,7 @@ class StrainsUploader(AbstractDataUploader):
                                     pool=pool_object,
                                     project=self.project,
                                     parent_strain=parent_object,
-                                    is_reference=bool(item['is_reference']),
+                                    is_reference=bool(item.get('is_reference', False)),
                                     organism=item['organism'],
                                     genotype=item['genotype'])
 
