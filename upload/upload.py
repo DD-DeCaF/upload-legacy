@@ -1,3 +1,17 @@
+# Copyright 2018 Novo Nordisk Foundation Center for Biosustainability, DTU.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import pandas as pd
 from datetime import datetime
 from potion_client.exceptions import ItemNotFound
@@ -131,7 +145,9 @@ class MediaUploader(AbstractDataUploader):
 
     def upload(self, iloop):
         for medium_name, ingredients, item in self.iloop_args:
-            item = {k: v.strip() for k, v in item.items() if isinstance(v, str)}
+            for k, v in item.items():
+                if isinstance(v, str):
+                    item[k] = v.strip()
             media_object = iloop.Medium.create(**item, organization=self.project.organization)
             media_object.update_contents(ingredients)
 
@@ -191,7 +207,7 @@ class StrainsUploader(AbstractDataUploader):
                     pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 except ItemNotFound:
                     parent_pool_object = None
-                    if not _isnan(item['parent_pool_alias']):
+                    if 'parent_pool_alias' in item and not _isnan(item['parent_pool_alias']):
                         try:
                             parent_pool_object = iloop.Pool.one(where={'alias': item['parent_pool_alias'],
                                                                        'project': self.project})
@@ -204,7 +220,7 @@ class StrainsUploader(AbstractDataUploader):
                                       type=item['pool_type'])
                     pool_object = iloop.Pool.one(where={'alias': item['pool_alias'], 'project': self.project})
                 parent_object = None
-                if not _isnan(item['parent_strain_alias']):
+                if 'parent_strain_alias' in item and not _isnan(item['parent_strain_alias']):
                     try:
                         parent_object = iloop.Strain.one(where={'alias': item['parent_strain_alias'],
                                                                 'project': self.project})
@@ -214,7 +230,7 @@ class StrainsUploader(AbstractDataUploader):
                                     pool=pool_object,
                                     project=self.project,
                                     parent_strain=parent_object,
-                                    is_reference=bool(item['is_reference']),
+                                    is_reference=bool(item.get('is_reference', False)),
                                     organism=item['organism'],
                                     genotype=item['genotype'])
 

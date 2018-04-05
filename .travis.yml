@@ -29,6 +29,7 @@ install:
 script:
   - make test
   - docker-compose logs
+  - ./scripts/verify_license_headers.sh upload
 
 after_success:
   - docker-compose exec web /bin/bash -c "codecov --token $CODECOV_TOKEN"

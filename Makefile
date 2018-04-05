@@ -1,4 +1,4 @@
-.PHONY: start logs stop clean
+.PHONY: start logs license stop clean
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -12,6 +12,10 @@ start:
 ## Read the logs.
 logs:
 	docker-compose logs --tail="all" -f
+
+## Verify license headers in source code
+license:
+	./scripts/verify_license_headers.sh upload
 
 ## Shut down the Docker containers.
 stop:
