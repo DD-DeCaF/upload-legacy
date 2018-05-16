@@ -1,25 +1,27 @@
-version: "2.1"
+version: "3.1"
 
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    command: "-w 2 -b 0.0.0.0:7000 -t 150 -k aiohttp.worker.GunicornWebWorker --reload upload.app:app"
+    image: gcr.io/dd-decaf-cfbf6/upload:${IMAGE_TAG:-latest}
+    command: gunicorn -c gunicorn.py upload.app:get_app()
     ports:
-      - "${UPLOAD_PORT:-7000}:7000"
+      - "${UPLOAD_PORT:-8000}:8000"
     volumes:
-      - ./:/opt/upload
+      - .:/app
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONASYNCIODEBUG=1
+      - ENVIRONMENT=development
       - ILOOP_TOKEN
       - ILOOP_API=${ILOOP_API:-http://iloop-backend:80/api}
     networks:
-      iloop:
+      DD-DeCaF:
         aliases:
-          - upload-backend
+          - iloop-to-model
 
 networks:
-  iloop:
+  DD-DeCaF:
     external: true

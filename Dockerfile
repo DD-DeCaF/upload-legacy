@@ -9,12 +9,11 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade --process-dependency-links -r /tmp/requirements.txt && \
     rm -rf /root/.cache /tmp/* /var/tmp/*
 
-COPY . /opt/upload
+ARG CWD=/app
+WORKDIR "${CWD}/"
 
-# Setting the working directory is necessary for the tests.
-WORKDIR /opt/upload
+ENV PYTHONPATH=${CWD}/src
 
-ENV PYTHONPATH "${PYTHONPATH}:/opt/upload"
+COPY . "${CWD}/"
 
-ENTRYPOINT ["gunicorn"]
-CMD ["-w", "4", "-b", "0.0.0.0:7000", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:get_app()"]
