@@ -1,13 +1,21 @@
-.PHONY: start logs license stop clean
+.PHONY: start qa test flake8 isort isort-save license stop clean logs test-travis setup network
+
+#################################################################################
+# GLOBALS                                                                       #
+#################################################################################
+
+PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
-## Install and start the upload service.
+## Install and start the model service.
 start:
 	docker network inspect iloop || docker network create iloop
 	docker-compose up -d --build
+
 ## Run all initialization targets.
 setup: network
 
@@ -15,13 +23,33 @@ setup: network
 network:
 	docker network inspect DD-DeCaF >/dev/null 2>&1 || \
 		docker network create DD-DeCaF
-## Read the logs.
-logs:
-	docker-compose logs --tail="all" -f
 
-## Verify license headers in source code
+
+## Run all QA targets
+qa: test flake8 isort license
+
+## Run the tests
+test: start
+	@echo "**********************************************************************"
+	@echo "* Running tests."
+	@echo "**********************************************************************"
+	docker-compose exec web /bin/bash -c "py.test -vxs --cov=./iloop_to_model tests/"
+
+## Run flake8
+flake8:
+	docker-compose run --rm web flake8 iloop_to_model tests
+
+## Check import sorting
+isort:
+	docker-compose run --rm web isort --check-only --recursive iloop_to_model tests
+
+## Sort imports and write changes to files
+isort-save:
+	docker-compose run --rm web isort --recursive iloop_to_model tests
+
+## Verify license headers in source files
 license:
-	./scripts/verify_license_headers.sh upload
+	./scripts/verify_license_headers.sh iloop_to_model tests
 
 ## Shut down the Docker containers.
 stop:
@@ -31,9 +59,15 @@ stop:
 clean:
 	docker-compose down
 
-## Start the service and run unit tests.
-test: start
-	docker-compose exec web /bin/bash -c "pytest -vs --cov=./upload upload/tests/"
+## Run the tests and report coverage (see https://docs.codecov.io/docs/testing-with-docker).
+test-travis:
+	$(eval ci_env=$(shell bash <(curl -s https://codecov.io/env)))
+	docker-compose run --rm $(ci_env) web \
+		/bin/sh -c "pytest -s --cov=src/model tests && codecov"
+
+## Read the logs.
+logs:
+	docker-compose logs --tail="all" -f
 
 #################################################################################
 # PROJECT RULES                                                                 #

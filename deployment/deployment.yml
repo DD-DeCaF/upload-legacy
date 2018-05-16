@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-production
+spec:
+  selector:
+    matchLabels:
+      app: upload
+      env: production
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: upload
+        env: production
+    spec:
+      containers:
+      - name: web
+        image: gcr.io/dd-decaf-cfbf6/upload:master
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ILOOP_API
+          value: https://data.dd-decaf.eu/api
+        - name: MODEL_API
+          value: https://api.dd-decaf.eu
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: upload-production
+              key: SENTRY_DSN
+        - name: ILOOP_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: upload-production
+              key: ILOOP_TOKEN
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-staging
+spec:
+  selector:
+    matchLabels:
+      app: upload
+      env: staging
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: upload
+        env: staging
+    spec:
+      containers:
+      - name: web
+        image: gcr.io/dd-decaf-cfbf6/upload:devel
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ILOOP_API
+          value: https://iloop-staging.dd-decaf.eu/api
+        - name: MODEL_API
+          value: https://api-staging.dd-decaf.eu
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: upload-production
+              key: SENTRY_DSN
+        - name: ILOOP_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: upload-production
+              key: ILOOP_TOKEN
+
