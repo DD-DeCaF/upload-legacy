@@ -169,29 +169,35 @@ async def schema(request):
 
 
 ROUTE_CONFIG = [
-    ('POST', '/upload', upload),
-    ('GET', '/upload/version', version),
-    ('GET', '/upload/list_projects', list_projects),
-    ('GET', '/upload/schema/{what}', schema),
+    ('POST', '/', upload),
+    ('GET', '/version', version),
+    ('GET', '/list_projects', list_projects),
+    ('GET', '/schema/{what}', schema),
 ]
+def get_app():
+    app = web.Application(middlewares=[raven_middleware])
+    # Configure default CORS settings.
+    cors = aiohttp_cors.setup(app, defaults={
+        "*": aiohttp_cors.ResourceOptions(
+            expose_headers="*",
+            allow_headers="*",
+            allow_credentials=True,
+        )
+    })
 
-app = web.Application(middlewares=[raven_middleware])
-# Configure default CORS settings.
-cors = aiohttp_cors.setup(app, defaults={
-    "*": aiohttp_cors.ResourceOptions(
-        expose_headers="*",
-        allow_headers="*",
-        allow_credentials=True,
-    )
-})
+    # Configure CORS on all routes.
+    for route in list(app.router.routes()):
+        cors.add(route)
+    for method, path, handler in ROUTE_CONFIG:
+        resource = app.router.add_resource(path)
+        cors.add(resource)
+        cors.add(resource.add_route(method, handler))
 
-for method, path, handler in ROUTE_CONFIG:
-    resource = app.router.add_resource(path)
-    cors.add(resource)
-    cors.add(resource.add_route(method, handler))
+    return app
 
 
 async def start(loop):
+    app = get_app()
     await loop.create_server(app.make_handler(), '0.0.0.0', 8001)
     logger.info('Web server is up')
 
