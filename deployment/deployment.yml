@@ -35,6 +35,12 @@ spec:
             secretKeyRef:
               name: upload-production
               key: ILOOP_TOKEN
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
 
 ---
 
@@ -75,4 +81,9 @@ spec:
             secretKeyRef:
               name: upload-production
               key: ILOOP_TOKEN
+        resources:
+          requests:
+            cpu: "5m"
+          limits:
+            cpu: "100m"
 
