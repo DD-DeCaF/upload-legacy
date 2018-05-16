@@ -4,8 +4,6 @@ metadata:
   name: upload-production
   annotations:
     prometheus.io/probe: "true"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9121"
 spec:
   selector:
     app: upload
@@ -14,7 +12,7 @@ spec:
   - name: web
     protocol: TCP
     port: 80
-    targetPort: 7000
+    targetPort: 8000
 
 ---
 
@@ -24,8 +22,6 @@ metadata:
   name: upload-staging
   annotations:
     prometheus.io/probe: "true"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9121"
 spec:
   selector:
     app: upload
@@ -34,4 +30,4 @@ spec:
   - name: web
     protocol: TCP
     port: 80
-    targetPort: 7000
+    targetPort: 8000
