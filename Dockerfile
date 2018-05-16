@@ -16,5 +16,4 @@ ENV PYTHONPATH=${CWD}/src
 
 COPY . "${CWD}/"
 
-ENTRYPOINT ["gunicorn"]
-CMD ["-w", "4", "-b", "0.0.0.0:8000", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:get_app()"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "-t", "150", "-k", "aiohttp.worker.GunicornWebWorker", "upload.app:get_app()"]
