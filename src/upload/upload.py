@@ -18,7 +18,7 @@ from potion_client.exceptions import ItemNotFound
 from goodtables import Inspector
 from dateutil.parser import parse as parse_date
 import json
-from os.path import abspath, dirname, join, exists
+from os.path import abspath, join, exists
 from requests import HTTPError
 from copy import deepcopy
 from upload import logger
@@ -41,7 +41,7 @@ def get_schema(schema_name):
                        'fluxes': 'fluxes_schema.json',
                        'protein_abundances': 'protein_abundances_schema.json'}
     schema_name = default_schemas[schema_name]
-    schema_dir = abspath(join(dirname(abspath(__file__)), "data", "schemas"))
+    schema_dir = abspath(join("data", "schemas"))
     schema = join(schema_dir, schema_name)
     if not exists(schema):
         raise FileNotFoundError('missing schema %s' % schema)

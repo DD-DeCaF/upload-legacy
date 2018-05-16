@@ -1,13 +1,12 @@
-.PHONY: start logs license stop clean
+.PHONY: setup network keypair databases lock build start qa style test \
+		test-travis flake8 isort isort-save license stop clean logs
+SHELL:=/bin/bash
+
 
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
-## Install and start the upload service.
-start:
-	docker network inspect iloop || docker network create iloop
-	docker-compose up -d --build
 ## Run all initialization targets.
 setup: network
 
@@ -15,31 +14,46 @@ setup: network
 network:
 	docker network inspect DD-DeCaF >/dev/null 2>&1 || \
 		docker network create DD-DeCaF
-## Read the logs.
-logs:
-	docker-compose logs --tail="all" -f
 
-## Verify license headers in source code
+## Build local docker images.
+build:
+	docker-compose build
+
+## Start all services in the background.
+start:
+	docker-compose up -d
+
+## Run all QA targets.
+qa: test style
+
+## Run all style related targets.
+style: license
+
+## Run the tests.
+test:
+	-docker-compose run --rm web pytest -vs --cov=src/upload tests
+
+## Run the tests and report coverage (see https://docs.codecov.io/docs/testing-with-docker).
+test-travis:
+	$(eval ci_env=$(shell bash <(curl -s https://codecov.io/env)))
+	docker-compose run --rm -e $(ci_env) web \
+		bash -c "pytest -s --cov=src/iam tests && codecov"
+
+## Verify source code license headers.
 license:
-	./scripts/verify_license_headers.sh upload
+	-./scripts/verify_license_headers.sh src/upload tests
 
-## Shut down the Docker containers.
+## Stop all services.
 stop:
 	docker-compose stop
 
-## Remove all containers.
+## Stop all services and remove containers.
 clean:
 	docker-compose down
 
-## Start the service and run unit tests.
-test: start
-	docker-compose exec web /bin/bash -c "pytest -vs --cov=./upload upload/tests/"
-
-#################################################################################
-# PROJECT RULES                                                                 #
-#################################################################################
-
-
+## Follow the logs.
+logs:
+	docker-compose logs --tail="all" -f
 
 #################################################################################
 # Self Documenting Commands                                                     #

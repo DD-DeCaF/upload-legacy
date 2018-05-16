@@ -27,7 +27,7 @@ from upload.settings import Default
 class IloopCache:
 
     def __init__(self):
-        with open(os.path.join(os.path.dirname(__file__), 'data/chebi.pickle'), 'rb') as compounds_pickle:
+        with open('data/chebi.pickle', 'rb') as compounds_pickle:
             compounds = pickle.load(compounds_pickle)
         self.cache_fun = {'protein': lambda iloop: frozenset(iloop.Xref.subset(type='protein')),
                           'reaction': lambda iloop: frozenset(iloop.Xref.subset(type='reaction')),
