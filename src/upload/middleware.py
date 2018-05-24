@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import aiohttp
+
 from . import raven_client
 
 
@@ -20,6 +22,9 @@ async def raven_middleware(app, handler):
     async def middleware_handler(request):
         try:
             return await handler(request)
+        except aiohttp.web.HTTPClientError:
+            # Do not capture client errors (like 404s)
+            raise
         except Exception:
             raven_client.captureException()
             raise
