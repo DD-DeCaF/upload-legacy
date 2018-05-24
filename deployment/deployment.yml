@@ -74,12 +74,12 @@ spec:
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: upload-production
+              name: upload-staging
               key: SENTRY_DSN
         - name: ILOOP_TOKEN
           valueFrom:
             secretKeyRef:
-              name: upload-production
+              name: upload-staging
               key: ILOOP_TOKEN
         resources:
           requests:
