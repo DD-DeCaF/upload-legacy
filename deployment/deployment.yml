@@ -22,9 +22,9 @@ spec:
         - containerPort: 8000
         env:
         - name: ILOOP_API
-          value: https://data.dd-decaf.eu/api
+          value: http://iloop-production/api
         - name: MODEL_API
-          value: https://api.dd-decaf.eu
+          value: http://model-production
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
@@ -68,9 +68,9 @@ spec:
         - containerPort: 8000
         env:
         - name: ILOOP_API
-          value: https://iloop-staging.dd-decaf.eu/api
+          value: http://iloop-staging/api
         - name: MODEL_API
-          value: https://api-staging.dd-decaf.eu
+          value: http://model-staging
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
