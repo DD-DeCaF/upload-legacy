@@ -22,20 +22,23 @@ from pandas.io.common import CParserError
 import io
 import requests
 import json
+import logging
 from functools import wraps, partial
 from upload.upload import (MediaUploader, StrainsUploader, FermentationUploader, ScreenUploader,
                            XrefMeasurementUploader, get_schema)
 from tempfile import mkstemp
 from potion_client.exceptions import ItemNotFound
-from upload import iloop_client, __version__, logger
+from upload import iloop_client, __version__
 from upload.settings import Default
 from upload.checks import (compound_name_unknown, medium_name_unknown, strain_alias_unknown,
                            reaction_id_unknown, protein_id_unknown, synonym_to_chebi_name, check_safe_partial,
                            medium_name_already_defined, iloop_cache)
 from upload.middleware import raven_middleware
 
-UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
+logger = logging.getLogger(__name__)
+
+UPLOAD_TYPES = frozenset(['strains', 'media', 'fermentation', 'screen', 'fluxes', 'protein_abundances'])
 
 def call_iloop_with_token(f):
     @wraps(f)

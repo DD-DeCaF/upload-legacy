@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import pandas as pd
 from datetime import datetime
 from potion_client.exceptions import ItemNotFound
@@ -21,12 +22,13 @@ import json
 from os.path import abspath, join, exists
 from requests import HTTPError
 from copy import deepcopy
-from upload import logger
 
 from upload.constants import measurement_test, compound_skip
 from upload.checks import genotype_not_gnomic
 from upload import _isnan
 
+
+logger = logging.getLogger(__name__)
 
 def place_holder_compound_synonym_mapper(synonym):
     return synonym

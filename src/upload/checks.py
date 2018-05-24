@@ -18,11 +18,14 @@ from potion_client.exceptions import ItemNotFound
 import gnomic
 import os
 import pickle
+import logging
 
 from upload.constants import skip_list, synonym_to_chebi_name_dict, compound_skip
-from upload import iloop_client, logger
+from upload import iloop_client
 from upload.settings import Default
 
+
+logger = logging.getLogger(__name__)
 
 class IloopCache:
 
