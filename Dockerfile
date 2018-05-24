@@ -1,5 +1,7 @@
 FROM python:3.6-slim
 
+ENV PYTHONUNBUFFERED 1
+
 RUN apt-get update && apt-get -y upgrade && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

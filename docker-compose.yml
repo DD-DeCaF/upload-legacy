@@ -12,7 +12,6 @@ services:
     volumes:
       - .:/app
     environment:
-      - PYTHONUNBUFFERED=1
       - PYTHONASYNCIODEBUG=1
       - ENVIRONMENT=development
       - ILOOP_TOKEN
