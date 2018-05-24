@@ -86,4 +86,3 @@ spec:
             cpu: "5m"
           limits:
             cpu: "100m"
-
