@@ -2,8 +2,6 @@ kind: Service
 apiVersion: v1
 metadata:
   name: upload-production
-  annotations:
-    prometheus.io/probe: "true"
 spec:
   selector:
     app: upload
@@ -20,8 +18,6 @@ kind: Service
 apiVersion: v1
 metadata:
   name: upload-staging
-  annotations:
-    prometheus.io/probe: "true"
 spec:
   selector:
     app: upload
