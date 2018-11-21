@@ -172,10 +172,10 @@ async def schema(request):
 
 
 ROUTE_CONFIG = [
-    ('POST', '/', upload),
-    ('GET', '/version', version),
-    ('GET', '/list_projects', list_projects),
-    ('GET', '/schema/{what}', schema),
+    ('POST', '/upload', upload),
+    ('GET', '/upload/version', version),
+    ('GET', '/upload/list_projects', list_projects),
+    ('GET', '/upload/schema/{what}', schema),
 ]
 def get_app():
     app = web.Application(middlewares=[raven_middleware])
