@@ -26,7 +26,11 @@ accesslog = "-"
 
 
 if _config == "production":
-    workers = os.cpu_count() * 2 + 1
+    # Our resource policy is that each web service is granted at least a single
+    # vCPU when available. The number of workers is then a guess that having two
+    # workers I/O bound and a third processing a request will utilize available
+    # resources well, but that guess needs to be tested and benchmarked.
+    workers = 3
     preload_app = True
     loglevel = "INFO"
 else:
