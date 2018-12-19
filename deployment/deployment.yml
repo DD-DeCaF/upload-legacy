@@ -36,7 +36,6 @@ spec:
               name: upload-production
               key: ILOOP_TOKEN
         resources:
-          requests:
-            cpu: "10m"
           limits:
             cpu: "1000m"
+            memory: "256Mi"
