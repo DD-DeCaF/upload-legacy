@@ -36,6 +36,5 @@ spec:
               name: upload-legacy
               key: ILOOP_TOKEN
         resources:
-          limits:
-            cpu: "1000m"
-            memory: "256Mi"
+          requests:
+            cpu: "0"
