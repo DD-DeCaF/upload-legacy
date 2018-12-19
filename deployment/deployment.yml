@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: upload-production
+  name: upload-legacy
 spec:
   selector:
     matchLabels:
       app: upload
-      env: production
+      env: legacy
   replicas: 1
   template:
     metadata:
       labels:
         app: upload
-        env: production
+        env: legacy
     spec:
       containers:
       - name: web
@@ -24,16 +24,16 @@ spec:
         - name: ILOOP_API
           value: http://iloop-production/api
         - name: MODEL_API
-          value: http://model-production
+          value: http://model-legacy
         - name: SENTRY_DSN
           valueFrom:
             secretKeyRef:
-              name: upload-production
+              name: upload-legacy
               key: SENTRY_DSN
         - name: ILOOP_TOKEN
           valueFrom:
             secretKeyRef:
-              name: upload-production
+              name: upload-legacy
               key: ILOOP_TOKEN
         resources:
           limits:

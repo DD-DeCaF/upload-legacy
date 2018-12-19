@@ -1,11 +1,11 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: upload-production
+  name: upload-legacy
 spec:
   selector:
     app: upload
-    env: production
+    env: legacy
   ports:
   - name: web
     protocol: TCP
